@@ -10,11 +10,17 @@ This script generates all controlled vocabulary (CV) json files residing this th
 """
 PJD 10 Feb 2022     - Started
 PJD 10 Feb 2022     - Updated following details at https://pcmdi.llnl.gov/ipcc/IPCC_output_requirements.htm
+PJD 14 Feb 2022     - Updated activity_id to include ScenarioMIP; Updated missing ERF from AR5
+                    https://www.ipcc.ch/site/assets/uploads/2017/09/WG1AR5_AnnexII_FINAL.pdf#Page=41
+PJD 14 Feb 2022     - Updated frequency following output specs
+                    https://pcmdi.llnl.gov/mips/cmip3/experiment.html#Introduction
 
 @author: durack1
 """
 
 # %% imports
+
+# %% Set commit message and author info
 import datetime
 import calendar
 import gc
@@ -22,8 +28,6 @@ import json
 import time
 import os
 import platform
-
-# %% Set commit message and author info
 commitMessage = '\"initialize CMIP3_CVs\"'
 author = 'Paul J. Durack <durack1@llnl.gov>'
 author_institution_id = 'PCMDI'
@@ -49,17 +53,21 @@ masterTargets = [
 activity_id = {
     # Needs updating
     'CMIP': 'CMIP DECK: 1pctCO2, abrupt4xCO2, amip, historical, and piControl experiments',
+    'ScenarioMIP': 'Scenario Model Intercomparison Project'
 }
 
 # %% Experiments
+# https://www.ipcc.ch/site/assets/uploads/2017/09/WG1AR5_AnnexII_FINAL.pdf#Page=41 - ERF / Wm-2 values
+# https://www.ipcc.ch/site/assets/uploads/2017/09/WG1AR5_AnnexII_FINAL.pdf#Page=28 - CO2 concentrations
+# Expand with alias = picntrl alias piControl; 20c3m alias historical
 experiment_id = {
     'picntrl': 'DECK: pre-industrial control',  # Needs checking
     'pdcntrl': 'DECK: present-day control',
     '20c3m': 'CMIP3 historical',
     'commit': 'committed climate change experiment',
-    'sresa2': 'future scenario with high radiative forcing by the end of century. Following approximately X.X Wm-2 global forcing pathway based on SRES A2 storyline. Concentration-driven',
-    'sresa1b': 'future scenario with medium radiative forcing and stabilization at 720 ppm by the end of century. Following approximately X.X Wm-2 global forcing pathway based on SRES A1B storyline. Concentration-driven',
-    'sresb1': 'future scenario with low radiative forcing and stabilization at 500 ppm by the end of century. Following approximately X.X Wm-2 global forcing pathway based on SRES B1 storyline. Concentration-driven',
+    'sresa2': 'future scenario with high radiative forcing reaching 846 ppm by the end of century. Following approximately 8.1 Wm-2 global forcing pathway based on SRES A2 storyline. Concentration-driven',
+    'sresa1b': 'future scenario with medium radiative forcing reaching ~720 ppm (IS92a = 713 ppm) by the end of century. Following approximately 6.1 Wm-2 global forcing pathway based on SRES A1B storyline. Concentration-driven',
+    'sresb1': 'future scenario with low radiative forcing and stabilization at 544 ppm by the end of century. Following approximately 4.2 Wm-2 global forcing pathway based on SRES B1 storyline. Concentration-driven',
     '1pctto2x': 'DECK: 1pctCO2 to doubling',
     '1pctto4x': 'DECK: 1pctCO2 to quadrupling',
     'slabcntl': 'atmosphere-only slab pre-industrial control',
@@ -68,18 +76,16 @@ experiment_id = {
 }
 
 # %% Frequencies
+# https://pcmdi.llnl.gov/mips/cmip3/experiment.html#Introduction - table outputs listing requested frequencies
 frequency = {
-    '1hr': 'sampled hourly',  # Needs updating
     '3hr': '3 hourly mean samples',
-    '6hr': '6 hourly mean samples',
     'day': 'daily mean samples',
     'fx': 'fixed (time invariant) field',
     'mon': 'monthly mean samples',
-    'monC': 'monthly climatology computed from monthly mean samples',
-    'yr': 'annual mean samples',
 }
 
 # %% Grid labels
+# Didn't exist in CMIP3 - gn? Or were fields remapped as per output request?
 grid_label = {
     'gm': 'global mean data',  # Needs updating
     'gn': 'data reported on a model\'s native grid',
@@ -91,6 +97,7 @@ grid_label = {
 }
 
 # %% Institutions
+# Do we map from CMIP6 -> CMIP3 e.g. NOAA-GFDL, rather than gfdl
 institution_id = {
     'AER': 'Research and Climate Group, Atmospheric and Environmental Research, 131 Hartwell Avenue, Lexington, MA 02421, USA',  # Needs updating
     'AS-RCEC': 'Research Center for Environmental Changes, Academia Sinica, Nankang, Taipei 11529, Taiwan',
