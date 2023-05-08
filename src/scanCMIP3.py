@@ -1,0 +1,1 @@
+/home/durack1/git/dump/221010-CMIP3-MetaScour/scanCMIP3.py
