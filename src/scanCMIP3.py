@@ -15,6 +15,9 @@ PJD 12 Oct 2022     - Added noDateFileCount/List - separate non-bad files?
 PJD 13 Oct 2022     - Added try around file opens
 PJD 14 Oct 2022     - Updated json output names to optimize ordering !_
 PJD 29 Jun 2023     - Updated with getSha256
+PJD 30 Jun 2023     - Updated to scan additional global_atts: contact, experiment_id, institution, realization, source, table_id, comment
+PJD 30 Jun 2023     - Added getFileSize
+PJD 30 Jun 2023     - Removed table_id as this has file generation date/time - will provide erronous timestamp
                     TODO: generalize for global attributes that serve CMIP5 and 6 datasets
                     TODO: add time start/stop to fileNames that exclude them
                     TODO: table mappings O1 = Omon?, O1e?
@@ -30,7 +33,7 @@ import re
 # import shutil
 import xarray as xr
 from xcdat import open_dataset
-# import pdb
+import pdb
 # import sys
 # import time
 
@@ -100,11 +103,23 @@ def fixFunc(fixStr, fixStrInfo):
     return fix
 
 
-def getSha256(filePath):
+def getFileSize(filePath):
+    if os.path.isfile(filePath):
+        fileStats = os.stat(filePath)
+        fileSizeBytes = fileStats.st_size
+    else:
+        print("File:", filePath, "not a valid file")
+        fileSizeBytes = 0.
+
+    return fileSizeBytes
+
+
+def getSha256(filePath, print=False):
     with open(filePath, "rb") as f:
         bytes = f.read()  # read entire file as bytes
         readable_hash = hashlib.sha256(bytes).hexdigest()
-        print(readable_hash)
+        if print:
+            print(readable_hash)
 
     return readable_hash
 
@@ -208,15 +223,17 @@ def openData(filePath, fileName, ...):
 """
 
 # %% deal with paths
-os.chdir("/p/user_pub/climate_work/durack1/tmp/")
+# "/p/user_pub/climate_work/durack1/tmp/"
+os.chdir("/home/durack1/git/CMIP3_CVs/src")
 destDir = "CMIP3"  # "/a/"
 # if os.path.exists(destDir):
 #    shutil.rmtree(destDir)
 # os.makedirs(destDir)
 
 # %% create lookup lists
-attList = ["history", "date", "cmor_version", "forcing"]
-# "creation_date","license","tracking_id",
+attList = ["cmor_version", "comment", "contact", "date", "experiment_id", "forcing",
+           "history", "institution", "realization", "source"]
+# "creation_date","license","tracking_id", "table_id"
 monList = ["Jan", "Feb", "Mar", "Apr", "May",
            "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
@@ -271,6 +288,10 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
             for c1, fileName in enumerate(files):
                 filePath = os.path.join(root, fileName)
                 print("{:06d}".format(count), "filePath:", filePath)
+                # get sha256
+                sha256 = getSha256(filePath)
+                # get fileSizeBytes
+                fileSizeBytes = getFileSize(filePath)
                 if filePath[-3:] != ".nc":  # deal with *.nc.bad files
                     badFileCount = badFileCount+1
                     print("no date; filePath:", filePath)
@@ -349,6 +370,7 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                                 yr = date[-1]
                                 date = makeDate(yr, mon, day, check=True)
                                 dateFound = True
+                                dateFoundAtt = att
                             # Deal with CMOR matches
                             if "CMOR rewrote data to comply" in attStr:
                                 attStrInd = attStr.index(" At ")
@@ -363,6 +385,7 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                                 if "cmor_version" in fh.attrs.keys():
                                     cmorVersion = fh.attrs["cmor_version"]
                                 dateFound = True
+                                dateFoundAtt = att
                             # Deal with regex matches
                             dateReg = [r"[0-3][0-9]/[0-3][0-9]/(?:[0-9][0-9])?[0-9][0-9]",
                                        r"year:[0-9]{4}:month:[0-9]{2}:day:[0-9]{2}",
@@ -381,6 +404,7 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                                     date = date[0].replace("year:", "").replace(
                                         ":month:", "-").replace(":day:", "-")
                                     dateFound = True
+                                    dateFoundAtt = att
                                 # NCAR CCSM format - r"[a-zA-Z]{3}\s[a-zA-Z]{3}\s{1,2}\d{1,2}\s\d{1,2}.\d{2}.\d{2}\s[A-Z]{3}\s\d{4}"
                                 elif date and any(zone in date[0] for zone in timeZones):
                                     date = date[0].split(" ")
@@ -394,13 +418,17 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                                     day = "{:02d}".format(int(day))
                                     date = makeDate(yr, mon, day, check=True)
                                     dateFound = True
+                                    dateFoundAtt = att
                     # if a valid date start saving pieces
                     if date:
                         # save filePath, fileName, attName, date
                         cm3[root][fileName] = {}
-                        cm3[root][fileName][att] = date
+                        cm3[root][fileName]["date"] = [date, dateFoundAtt]
                         cm3[root][fileName]["time0"] = startTime
                         cm3[root][fileName]["timeN"] = endTime
+                        cm3[root][fileName]["sha256"] = sha256
+                        cm3[root][fileName]["filePath"] = filePath
+                        cm3[root][fileName]["fileSizeBytes"] = fileSizeBytes
                         if cmorVersion:
                             cm3[root][fileName]["cmorVersion"] = str(
                                 cmorVersion)
@@ -410,7 +438,8 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                         noDateFileCount = noDateFileCount+1
                         print("no date; filePath:", filePath)
                         cm3["!noDateFileCount"] = noDateFileCount
-                        cm3["!noDateFile"][noDateFileCount] = filePath
+                        cm3["!noDateFile"][noDateFileCount] = [
+                            filePath, sha256, fileSizeBytes]
                     print("date:", date)
 
                     # close open file
