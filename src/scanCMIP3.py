@@ -19,6 +19,7 @@ PJD 30 Jun 2023     - Updated to scan additional global_atts: contact, experimen
 PJD 30 Jun 2023     - Added getFileSize
 PJD 30 Jun 2023     - Removed table_id as this has file generation date/time - will provide erronous timestamp
 PJD 11 Jul 2023     - Added os.stat().st_mtime as these appear to be reasonable estimates
+PJD 11 Jul 2023     - Added /p/css03/esgf_publish/cmip3/ipcc/cmip5/ozone/ to exclude dirs "bad"
                     TODO: generalize for global attributes that serve CMIP5 and 6 datasets
                     TODO: add time start/stop to fileNames that exclude them
                     TODO: table mappings O1 = Omon?, O1e?
@@ -249,6 +250,7 @@ bad = {
     "/p/css03/esgf_publish/cmip3/ipcc/data8/picntrl/ocn/mo/rhopoto/ncar_ccsm3_0/run2": ["rhopoto_O1.PIcntrl_2.CCSM.ocnm.0585-01_cat_0589-12.nc", "drop bad time_bnds", "", ["time_bnds"]],
     "/p/css03/esgf_publish/cmip3/ipcc/data16/sresa1b/atm/mo/rlds/mpi_echam5/run2": ["rlds_A1.nc", "drop bad time_bnds", "", ["time_bnds"]],
     "/p/css03/esgf_publish/cmip3/ipcc/cfmip/2xco2/atm/da/pr/ukmo_hadsm4/run1": ["pr_CF3.nc", "bad time dimension", "", []],
+    "/p/css03/esgf_publish/cmip3/ipcc/cmip5/ozone/": ["", "", []],  # CMIP5 ozone forcing data
     # "/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/run1": ["rlus_A2_a42_0108-0147.nc", "bad time dimension values", "", []],
     # /p/css03/esgf_publish/cmip3/ipcc/cfmip/2xco2/atm/mo/rsut/mpi_echam5/run1/rsut_CF1.nc
 }
