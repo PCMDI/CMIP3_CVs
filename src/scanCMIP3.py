@@ -18,6 +18,7 @@ PJD 29 Jun 2023     - Updated with getSha256
 PJD 30 Jun 2023     - Updated to scan additional global_atts: contact, experiment_id, institution, realization, source, table_id, comment
 PJD 30 Jun 2023     - Added getFileSize
 PJD 30 Jun 2023     - Removed table_id as this has file generation date/time - will provide erronous timestamp
+PJD 11 Jul 2023     - Added os.stat().st_mtime as these appear to be reasonable estimates
                     TODO: generalize for global attributes that serve CMIP5 and 6 datasets
                     TODO: add time start/stop to fileNames that exclude them
                     TODO: table mappings O1 = Omon?, O1e?
@@ -103,15 +104,19 @@ def fixFunc(fixStr, fixStrInfo):
     return fix
 
 
-def getFileSize(filePath):
+def getFileStats(filePath):
     if os.path.isfile(filePath):
         fileStats = os.stat(filePath)
         fileSizeBytes = fileStats.st_size
+        fileModTime = datetime.datetime.fromtimestamp(fileStats.st_mtime)
+        fileModTime = makeDate(
+            fileModTime.year, fileModTime.month, fileModTime.day, True)
     else:
         print("File:", filePath, "not a valid file")
         fileSizeBytes = 0.
+        fileModTime = 0.
 
-    return fileSizeBytes
+    return fileSizeBytes, fileModTime
 
 
 def getSha256(filePath, print=False):
@@ -290,8 +295,8 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                 print("{:06d}".format(count), "filePath:", filePath)
                 # get sha256
                 sha256 = getSha256(filePath)
-                # get fileSizeBytes
-                fileSizeBytes = getFileSize(filePath)
+                # get fileSizeBytes, fileModTime
+                fileSizeBytes, fileModTime = getFileStats(filePath)
                 if filePath[-3:] != ".nc":  # deal with *.nc.bad files
                     badFileCount = badFileCount+1
                     print("no date; filePath:", filePath)
@@ -339,8 +344,8 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                             cm3["!badFileCount"] = badFileCount
                             cm3["!badFile"][badFileCount] = filePath
                             continue
-                    except:
-                        print('except')
+                    except Exception as ex:
+                        print('except', ex)
                         # pdb.set_trace()
                         fileReadErrorCount = fileReadErrorCount+1
                         print("fileReadError; filePath:", filePath)
@@ -353,8 +358,14 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                     else:
                         startTime, endTime = [None for _ in range(2)]
                     attDict = fh.attrs
+
+                    # impose filesystem file modification date
+                    date = fileModTime
+                    dateFoundAtt = "os.stat().st_mtime"
+
+                    # work through all attributes to seek and overwrite date string
                     for att in attList:
-                        if not att in attDict.keys():
+                        if att not in attDict.keys():
                             # print(att, "not in file, skipping..")
                             continue
                         if isinstance(attDict[att], str):
@@ -396,7 +407,7 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                                 if dateFound:
                                     continue
                                 date = re.findall(dateFormat, attStr)
-                                # timezones
+                                # timezones")
                                 timeZones = ["EDT", "EST",
                                              "MDT", "MST", "PDT", "PST"]
                                 # CSIRO format - r"year:[0-9]{4}:month:[0-9]{2}:day:[0-9]{2}"
@@ -435,11 +446,12 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                         cm3["!_cmorCount"] = cmorCount
                         cm3["!_fileCount"] = count  # https://ascii.cl/
                     if not date:
-                        noDateFileCount = noDateFileCount+1
-                        print("no date; filePath:", filePath)
-                        cm3["!noDateFileCount"] = noDateFileCount
-                        cm3["!noDateFile"][noDateFileCount] = [
-                            filePath, sha256, fileSizeBytes]
+                        pdb.set_trace()
+                        #noDateFileCount = noDateFileCount+1
+                        #print("no date; filePath:", filePath)
+                        #cm3["!noDateFileCount"] = noDateFileCount
+                        # cm3["!noDateFile"][noDateFileCount] = [
+                        #    filePath, sha256, fileSizeBytes]
                     print("date:", date)
 
                     # close open file
