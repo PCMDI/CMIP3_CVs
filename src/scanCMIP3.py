@@ -38,6 +38,7 @@ import re
 # import shutil
 import xarray as xr
 from xcdat import open_dataset
+
 # import pdb
 
 # import sys
@@ -163,8 +164,7 @@ def makeDRS(filePath, date):
     gridLabel = "gu"
     # filePath bits
     sourceBits = filePath.split("/")
-    experiments = {"pdcntrl", "picntrl",
-                   "20c3m", "sresa1b", "sresa2", "sresb1"}
+    experiments = {"pdcntrl", "picntrl", "20c3m", "sresa1b", "sresa2", "sresb1"}
     # https://github.com/PCMDI/CMIP3_CVs/blob/main/src/writeJson.py#L63-L76
     experimentId = sourceBits[3]
     sourceId = sourceBits[7]
@@ -345,8 +345,7 @@ for cmPath in [
         # Add dirs to exclude;
         [dirs.remove(d) for d in list(dirs) if d in excludeDirs]
         if root.split("/")[-1] == "ipcc":
-            [dirs.remove(d) for d in list(dirs)
-             if d in excludeDirs2]  # catch ipcc/ipcc
+            [dirs.remove(d) for d in list(dirs) if d in excludeDirs2]  # catch ipcc/ipcc
         if root in list(bad.keys()):
             # Weed out bad paths/files
             # print("in here!")
@@ -451,8 +450,7 @@ for cmPath in [
                                 date = attStr
                                 date = date.split("-")
                                 day = date[0]
-                                mon = "{:02d}".format(
-                                    monList.index(date[1]) + 1)
+                                mon = "{:02d}".format(monList.index(date[1]) + 1)
                                 yr = date[-1]
                                 date = makeDate(yr, mon, day, check=True)
                                 dateFound = True
@@ -462,13 +460,11 @@ for cmPath in [
                                 print("CMOR rewrote data to comply")
                                 attStrInd = attStr.index(" At ")
                                 attStr = attStr[attStrInd:]
-                                date = re.findall(
-                                    r"\d{1,2}/\d{1,2}/\d{2,4}", attStr)
+                                date = re.findall(r"\d{1,2}/\d{1,2}/\d{2,4}", attStr)
                                 date = date[0].split("/")
                                 # assuming mm/dd/yyyy e.g.
                                 # At 20:53:22 on 06/28/2005, CMOR rewrote data to comply with CF standards and IPCC Fourth Assessment requirements
-                                date = makeDate(
-                                    date[-1], date[0], date[1], check=True)
+                                date = makeDate(date[-1], date[0], date[1], check=True)
                                 cmorCount = cmorCount + 1
                                 if "cmor_version" in fh.attrs.keys():
                                     cmorVersion = fh.attrs["cmor_version"]
@@ -487,8 +483,14 @@ for cmPath in [
                                     # print("re.findall")
                                     date = re.findall(dateFormat, attStr)
                                     # timezones")
-                                    timeZones = ["EDT", "EST",
-                                                 "MDT", "MST", "PDT", "PST"]
+                                    timeZones = [
+                                        "EDT",
+                                        "EST",
+                                        "MDT",
+                                        "MST",
+                                        "PDT",
+                                        "PST",
+                                    ]
                                     if not date:
                                         print("if not date", date)
                                         date = fileModTime
@@ -511,15 +513,15 @@ for cmPath in [
                                         # print("NCAR CCSM format")
                                         date = date[0].split(" ")
                                         mon = "{:02d}".format(
-                                            monList.index(date[1]) + 1)
+                                            monList.index(date[1]) + 1
+                                        )
                                         yr = date[-1]
                                         if len(date) == 6:
                                             day = date[2]
                                         elif len(date) == 7:
                                             day = date[3]
                                         day = "{:02d}".format(int(day))
-                                        date = makeDate(
-                                            yr, mon, day, check=True)
+                                        date = makeDate(yr, mon, day, check=True)
                                         dateFound = True
                                         dateFoundAtt = att
                     # if a valid date start saving pieces
@@ -533,18 +535,20 @@ for cmPath in [
                         cm3[root][fileName]["filePath"] = filePath
                         cm3[root][fileName]["fileSizeBytes"] = fileSizeBytes
                         if cmorVersion:
-                            cm3[root][fileName]["cmorVersion"] = str(
-                                cmorVersion)
+                            cm3[root][fileName]["cmorVersion"] = str(cmorVersion)
                         cm3["!_cmorCount"] = cmorCount
                         cm3["!_fileCount"] = count  # https://ascii.cl/
                     else:
-                        print("if not date")
+                        print("if not date: noDateFileCount")
                         # pdb.set_trace()
-                        noDateFileCount = noDateFileCount+1
+                        noDateFileCount = noDateFileCount + 1
                         print("no date; filePath:", filePath)
                         cm3["!noDateFileCount"] = noDateFileCount
                         cm3["!noDateFile"][noDateFileCount] = [
-                            filePath, sha256, fileSizeBytes]
+                            filePath,
+                            sha256,
+                            fileSizeBytes,
+                        ]
                     print("date:", date)
 
                     # close open file
