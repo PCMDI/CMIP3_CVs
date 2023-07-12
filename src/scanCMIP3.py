@@ -10,12 +10,14 @@ PJD  6 Oct 2022     - Added badRoots and excludeDirs - to limit bombs
 PJD  7 Oct 2022     - Added "PST" test to NCAR files (alongside "MDT")
 PJD  8 Oct 2022     - Added ds.drop_vars call; add cmorVersion grab
 PJD  9 Oct 2022     - Augmented NCAR timezones; cmorVersion to str type
-PJD 10 Oct 2022     - Deal with edge case where CMOR was used to rewrite and CDO rewrote the rewritten /p/css03/esgf_publish/cmip3/ipcc/cfmip/2xco2/atm/mo/rsut/mpi_echam5/run1/rsut_CF1.nc
+PJD 10 Oct 2022     - Deal with edge case where CMOR was used to rewrite and CDO rewrote the rewritten
+                      /p/css03/esgf_publish/cmip3/ipcc/cfmip/2xco2/atm/mo/rsut/mpi_echam5/run1/rsut_CF1.nc
 PJD 12 Oct 2022     - Added noDateFileCount/List - separate non-bad files?
 PJD 13 Oct 2022     - Added try around file opens
 PJD 14 Oct 2022     - Updated json output names to optimize ordering !_
 PJD 29 Jun 2023     - Updated with getSha256
-PJD 30 Jun 2023     - Updated to scan additional global_atts: contact, experiment_id, institution, realization, source, table_id, comment
+PJD 30 Jun 2023     - Updated to scan additional global_atts: contact, experiment_id, institution,
+                      realization, source, table_id, comment
 PJD 30 Jun 2023     - Added getFileSize
 PJD 30 Jun 2023     - Removed table_id as this has file generation date/time - will provide erronous timestamp
 PJD 11 Jul 2023     - Added os.stat().st_mtime as these appear to be reasonable estimates
@@ -36,7 +38,7 @@ import re
 # import shutil
 import xarray as xr
 from xcdat import open_dataset
-import pdb
+# import pdb
 
 # import sys
 # import time
@@ -161,7 +163,8 @@ def makeDRS(filePath, date):
     gridLabel = "gu"
     # filePath bits
     sourceBits = filePath.split("/")
-    experiments = {"pdcntrl", "picntrl", "20c3m", "sresa1b", "sresa2", "sresb1"}
+    experiments = {"pdcntrl", "picntrl",
+                   "20c3m", "sresa1b", "sresa2", "sresb1"}
     # https://github.com/PCMDI/CMIP3_CVs/blob/main/src/writeJson.py#L63-L76
     experimentId = sourceBits[3]
     sourceId = sourceBits[7]
@@ -335,13 +338,15 @@ for cmPath in [
     "/p/css03/scratch/ipcc2_deleteme_July2020",
 ]:
     # for cmPath in ["/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/run1"]:  # bug hunting
+    # for cmPath in ["/p/css03/esgf_publish/cmip3/ipcc/data10/picntrl/ocn/fixed/zobt/csiro_mk3_0/run1/"]:  # bug hunting
     # for cmPath in list(bad.keys()):
     for root, dirs, files in os.walk(cmPath):
         print("root:", root)
         # Add dirs to exclude;
         [dirs.remove(d) for d in list(dirs) if d in excludeDirs]
         if root.split("/")[-1] == "ipcc":
-            [dirs.remove(d) for d in list(dirs) if d in excludeDirs2]  # catch ipcc/ipcc
+            [dirs.remove(d) for d in list(dirs)
+             if d in excludeDirs2]  # catch ipcc/ipcc
         if root in list(bad.keys()):
             # Weed out bad paths/files
             # print("in here!")
@@ -385,7 +390,7 @@ for cmPath in [
                     # pdb.set_trace()
                     try:
                         # wrap so bombs are caught in except
-                        if fixStr == None and badVars == None and badFile == None:
+                        if fixStr is None and badVars is None and badFile is None:
                             fh = open_dataset(filePath, use_cftime=True)
                         # Case bad root match, but not file
                         elif fixStrInfo and (badFile != fileName and not badFile == ""):
@@ -442,22 +447,28 @@ for cmPath in [
                             # print("attStr:", attStr)
                             # BCCR_BCM2_0 format
                             if att == "date":
+                                print("enter if att == date")
                                 date = attStr
                                 date = date.split("-")
                                 day = date[0]
-                                mon = "{:02d}".format(monList.index(date[1]) + 1)
+                                mon = "{:02d}".format(
+                                    monList.index(date[1]) + 1)
                                 yr = date[-1]
                                 date = makeDate(yr, mon, day, check=True)
                                 dateFound = True
                                 dateFoundAtt = att
                             # Deal with CMOR matches
                             if "CMOR rewrote data to comply" in attStr:
+                                print("CMOR rewrote data to comply")
                                 attStrInd = attStr.index(" At ")
                                 attStr = attStr[attStrInd:]
-                                date = re.findall(r"\d{1,2}/\d{1,2}/\d{2,4}", attStr)
+                                date = re.findall(
+                                    r"\d{1,2}/\d{1,2}/\d{2,4}", attStr)
                                 date = date[0].split("/")
-                                # assuming mm/dd/yyyy e.g. At 20:53:22 on 06/28/2005, CMOR rewrote data to comply with CF standards and IPCC Fourth Assessment requirements
-                                date = makeDate(date[-1], date[0], date[1], check=True)
+                                # assuming mm/dd/yyyy e.g.
+                                # At 20:53:22 on 06/28/2005, CMOR rewrote data to comply with CF standards and IPCC Fourth Assessment requirements
+                                date = makeDate(
+                                    date[-1], date[0], date[1], check=True)
                                 cmorCount = cmorCount + 1
                                 if "cmor_version" in fh.attrs.keys():
                                     cmorVersion = fh.attrs["cmor_version"]
@@ -470,37 +481,47 @@ for cmPath in [
                                 # r"Fri Aug  5 19:23:54 MDT 2005"
                                 r"[a-zA-Z]{3}\s[a-zA-Z]{3}\s{1,2}\d{1,2}\s\d{1,2}.\d{2}.\d{2}\s[A-Z]{3}\s\d{4}",
                             ]
-                            for dateFormat in dateReg:
-                                if dateFound:
-                                    continue
-                                date = re.findall(dateFormat, attStr)
-                                # timezones")
-                                timeZones = ["EDT", "EST", "MDT", "MST", "PDT", "PST"]
-                                # CSIRO format - r"year:[0-9]{4}:month:[0-9]{2}:day:[0-9]{2}"
-                                if date and ("year" in date[0]):
-                                    date = (
-                                        date[0]
-                                        .replace("year:", "")
-                                        .replace(":month:", "-")
-                                        .replace(":day:", "-")
-                                    )
-                                    dateFound = True
-                                    dateFoundAtt = att
-                                # NCAR CCSM format - r"[a-zA-Z]{3}\s[a-zA-Z]{3}\s{1,2}\d{1,2}\s\d{1,2}.\d{2}.\d{2}\s[A-Z]{3}\s\d{4}"
-                                elif date and any(
-                                    zone in date[0] for zone in timeZones
-                                ):
-                                    date = date[0].split(" ")
-                                    mon = "{:02d}".format(monList.index(date[1]) + 1)
-                                    yr = date[-1]
-                                    if len(date) == 6:
-                                        day = date[2]
-                                    elif len(date) == 7:
-                                        day = date[3]
-                                    day = "{:02d}".format(int(day))
-                                    date = makeDate(yr, mon, day, check=True)
-                                    dateFound = True
-                                    dateFoundAtt = att
+                            # further validate formats
+                            if not dateFound:
+                                for dateFormat in dateReg:
+                                    # print("re.findall")
+                                    date = re.findall(dateFormat, attStr)
+                                    # timezones")
+                                    timeZones = ["EDT", "EST",
+                                                 "MDT", "MST", "PDT", "PST"]
+                                    if not date:
+                                        print("if not date", date)
+                                        date = fileModTime
+                                        continue
+                                    # CSIRO format - r"year:[0-9]{4}:month:[0-9]{2}:day:[0-9]{2}"
+                                    elif date and ("year" in date[0]):
+                                        # print("CSIRO format")
+                                        date = (
+                                            date[0]
+                                            .replace("year:", "")
+                                            .replace(":month:", "-")
+                                            .replace(":day:", "-")
+                                        )
+                                        dateFound = True
+                                        dateFoundAtt = att
+                                    # NCAR CCSM format - r"[a-zA-Z]{3}\s[a-zA-Z]{3}\s{1,2}\d{1,2}\s\d{1,2}.\d{2}.\d{2}\s[A-Z]{3}\s\d{4}"
+                                    elif date and any(
+                                        zone in date[0] for zone in timeZones
+                                    ):
+                                        # print("NCAR CCSM format")
+                                        date = date[0].split(" ")
+                                        mon = "{:02d}".format(
+                                            monList.index(date[1]) + 1)
+                                        yr = date[-1]
+                                        if len(date) == 6:
+                                            day = date[2]
+                                        elif len(date) == 7:
+                                            day = date[3]
+                                        day = "{:02d}".format(int(day))
+                                        date = makeDate(
+                                            yr, mon, day, check=True)
+                                        dateFound = True
+                                        dateFoundAtt = att
                     # if a valid date start saving pieces
                     if date:
                         # save filePath, fileName, attName, date
@@ -512,16 +533,18 @@ for cmPath in [
                         cm3[root][fileName]["filePath"] = filePath
                         cm3[root][fileName]["fileSizeBytes"] = fileSizeBytes
                         if cmorVersion:
-                            cm3[root][fileName]["cmorVersion"] = str(cmorVersion)
+                            cm3[root][fileName]["cmorVersion"] = str(
+                                cmorVersion)
                         cm3["!_cmorCount"] = cmorCount
                         cm3["!_fileCount"] = count  # https://ascii.cl/
-                    if not date:
-                        pdb.set_trace()
-                        # noDateFileCount = noDateFileCount+1
-                        # print("no date; filePath:", filePath)
-                        # cm3["!noDateFileCount"] = noDateFileCount
-                        # cm3["!noDateFile"][noDateFileCount] = [
-                        #    filePath, sha256, fileSizeBytes]
+                    else:
+                        print("if not date")
+                        # pdb.set_trace()
+                        noDateFileCount = noDateFileCount+1
+                        print("no date; filePath:", filePath)
+                        cm3["!noDateFileCount"] = noDateFileCount
+                        cm3["!noDateFile"][noDateFileCount] = [
+                            filePath, sha256, fileSizeBytes]
                     print("date:", date)
 
                     # close open file
