@@ -23,6 +23,10 @@ PJD 30 Jun 2023     - Removed table_id as this has file generation date/time - w
 PJD 11 Jul 2023     - Added os.stat().st_mtime as these appear to be reasonable estimates
 PJD 11 Jul 2023     - Added /p/css03/esgf_publish/cmip3/ipcc/cmip5/ozone/ to exclude dirs "bad"
 PJD 12 Jul 2023     - Some reformatting to deal with date = [] instances
+PJD 19 Jul 2023     - Updated to deal with overwrites if CSIRO/NCAR formats found
+                    TODO: should checkDate be relaxed to allow years>2008 to provide dateStamps? see /p/css03/
+                    esgf_publish/cmip3/ipcc/20c3m/atm/mo/rsds/csiro_mk3_0/run1/rsds_A1.nc (history: 2005-01-12) &
+                    scratch/ipcc2_deleteme_July2020/20c3m/atm/mo/tas/csiro_mk3_0/run1/tas_A1.nc (filesystem: 2009-10-21)
                     TODO: generalize for global attributes that serve CMIP5 and 6 datasets
                     TODO: add time start/stop to fileNames that exclude them
                     TODO: table mappings O1 = Omon?, O1e?
@@ -35,13 +39,11 @@ import hashlib
 import json
 import os
 import re
-
-# import shutil
 import xarray as xr
 from xcdat import open_dataset
 
 # import pdb
-
+# import shutil
 # import sys
 # import time
 
@@ -251,6 +253,13 @@ for cmPath in [
     "/p/css03/esgf_publish/cmip3",
     "/p/css03/scratch/ipcc2_deleteme_July2020",
 ]:
+    #   for cmPath in [
+    "/p/css03/scratch/ipcc2_deleteme_July2020/",
+    # "/p/css03/scratch/ipcc2_deleteme_July2020/20c3m/atm/mo/prc/csiro_mk3_5/run1/",
+    # "/p/css03/scratch/ipcc2_deleteme_July2020/20c3m/atm/mo/tas/csiro_mk3_0/run1/tas_A1.nc" matches
+    # "/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/mo/rsds/csiro_mk3_0/run1/rsds_A1.nc"
+    # which has augmented history attribute 2005-01-12
+    # ]:  # bug hunting ; history tcl-nap format
     # for cmPath in ["/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/run1"]:  # bug hunting
     # for cmPath in ["/p/css03/esgf_publish/cmip3/ipcc/data10/picntrl/ocn/fixed/zobt/csiro_mk3_0/run1/"]:  # bug hunting
     # for cmPath in list(bad.keys()):
@@ -393,40 +402,47 @@ for cmPath in [
                                 r"[a-zA-Z]{3}\s[a-zA-Z]{3}\s{1,2}\d{1,2}\s\d{1,2}.\d{2}.\d{2}\s[A-Z]{3}\s\d{4}",
                             ]
                             # further validate formats
+                            timeZones = [
+                                "EDT",
+                                "EST",
+                                "MDT",
+                                "MST",
+                                "PDT",
+                                "PST",
+                            ]
                             if not dateFound:
+                                print("if not dateFound")
                                 for dateFormat in dateReg:
                                     # print("re.findall")
                                     date = re.findall(dateFormat, attStr)
                                     # timezones")
-                                    timeZones = [
-                                        "EDT",
-                                        "EST",
-                                        "MDT",
-                                        "MST",
-                                        "PDT",
-                                        "PST",
-                                    ]
-                                    if not date:
+                                    if date == []:
                                         print("if not date", date)
                                         date = fileModTime
                                         continue
                                     # CSIRO format - r"year:[0-9]{4}:month:[0-9]{2}:day:[0-9]{2}"
-                                    elif date and ("year" in date[0]):
-                                        # print("CSIRO format")
-                                        date = (
+                                    # if date and ("year" in date[0]):
+                                    elif "year" in date[0]:
+                                        print("CSIRO format")
+                                        print("date:", date)
+                                        # pdb.set_trace()
+                                        dateNew = (
                                             date[0]
                                             .replace("year:", "")
                                             .replace(":month:", "-")
                                             .replace(":day:", "-")
                                         )
+                                        print("dateNew:", dateNew)
+                                        date = dateNew
+                                        print("date:", date)
                                         dateFound = True
                                         dateFoundAtt = att
+                                        break  # caught date skip
                                     # NCAR CCSM format
                                     # r"[a-zA-Z]{3}\s[a-zA-Z]{3}\s{1,2}\d{1,2}\s\d{1,2}.\d{2}.\d{2}\s[A-Z]{3}\s\d{4}"
-                                    elif date and any(
-                                        zone in date[0] for zone in timeZones
-                                    ):
-                                        # print("NCAR CCSM format")
+                                    # elif date and any(
+                                    elif any(zone in date[0] for zone in timeZones):
+                                        print("NCAR CCSM format")
                                         date = date[0].split(" ")
                                         mon = "{:02d}".format(
                                             monList.index(date[1]) + 1
@@ -440,6 +456,18 @@ for cmPath in [
                                         date = makeDate(yr, mon, day, check=True)
                                         dateFound = True
                                         dateFoundAtt = att
+                                        break  # caught date skip
+
+                            print(
+                                "date:",
+                                date,
+                                "; dateFound:",
+                                dateFound,
+                                "; dateFoundAtt:",
+                                dateFoundAtt,
+                            )
+                            # pdb.set_trace()
+
                     # if a valid date start saving pieces
                     if date:
                         # save filePath, fileName, attName, date
