@@ -24,6 +24,7 @@ PJD 11 Jul 2023     - Added os.stat().st_mtime as these appear to be reasonable 
 PJD 11 Jul 2023     - Added /p/css03/esgf_publish/cmip3/ipcc/cmip5/ozone/ to exclude dirs "bad"
 PJD 12 Jul 2023     - Some reformatting to deal with date = [] instances
 PJD 19 Jul 2023     - Updated to deal with overwrites if CSIRO/NCAR formats found
+PJD 24 Jul 2023     - Add fileModTime to !noDateFile output (down to 77 files only in ipcc2_deleteme_July2020)
                     TODO: should checkDate be relaxed to allow years>2008 to provide dateStamps? see /p/css03/
                     esgf_publish/cmip3/ipcc/20c3m/atm/mo/rsds/csiro_mk3_0/run1/rsds_A1.nc (history: 2005-01-12) &
                     scratch/ipcc2_deleteme_July2020/20c3m/atm/mo/tas/csiro_mk3_0/run1/tas_A1.nc (filesystem: 2009-10-21)
@@ -250,7 +251,7 @@ badFileCount, cmorCount, count, fileReadErrorCount, noDateFileCount = [
     0 for _ in range(5)
 ]
 for cmPath in [
-    "/p/css03/esgf_publish/cmip3",
+    #"/p/css03/esgf_publish/cmip3",
     "/p/css03/scratch/ipcc2_deleteme_July2020",
 ]:
     #   for cmPath in [
@@ -492,6 +493,7 @@ for cmPath in [
                             filePath,
                             sha256,
                             fileSizeBytes,
+                            fileModTime,
                         ]
                     print("date:", date)
 
