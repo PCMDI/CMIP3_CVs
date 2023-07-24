@@ -25,6 +25,7 @@ PJD 11 Jul 2023     - Added /p/css03/esgf_publish/cmip3/ipcc/cmip5/ozone/ to exc
 PJD 12 Jul 2023     - Some reformatting to deal with date = [] instances
 PJD 19 Jul 2023     - Updated to deal with overwrites if CSIRO/NCAR formats found
 PJD 24 Jul 2023     - Add fileModTime to !noDateFile output (down to 77 files only in ipcc2_deleteme_July2020)
+PJD 24 Jul 2023     - Updated checkDate to return dateStr not None if 2003>year, year>2008
                     TODO: should checkDate be relaxed to allow years>2008 to provide dateStamps? see /p/css03/
                     esgf_publish/cmip3/ipcc/20c3m/atm/mo/rsds/csiro_mk3_0/run1/rsds_A1.nc (history: 2005-01-12) &
                     scratch/ipcc2_deleteme_July2020/20c3m/atm/mo/tas/csiro_mk3_0/run1/tas_A1.nc (filesystem: 2009-10-21)
@@ -56,7 +57,7 @@ def checkDate(dateStr):
     y, m, d = dateStr.split("-")
     if not 2003 <= int(y) <= 2008:
         print("year invalid:", y)
-        return None
+        return dateStr  # return even if invalid, was None
     if not 1 <= int(m) <= 12:
         print("month invalid:", m)
         return None
@@ -250,12 +251,13 @@ cm3["!fileReadError"] = {}
 badFileCount, cmorCount, count, fileReadErrorCount, noDateFileCount = [
     0 for _ in range(5)
 ]
+# for cmPath in [
+#    "/p/css03/esgf_publish/cmip3",
+#    "/p/css03/scratch/ipcc2_deleteme_July2020",
+# ]:
 for cmPath in [
-    #"/p/css03/esgf_publish/cmip3",
-    "/p/css03/scratch/ipcc2_deleteme_July2020",
-]:
-    #   for cmPath in [
     "/p/css03/scratch/ipcc2_deleteme_July2020/",
+]:
     # "/p/css03/scratch/ipcc2_deleteme_July2020/20c3m/atm/mo/prc/csiro_mk3_5/run1/",
     # "/p/css03/scratch/ipcc2_deleteme_July2020/20c3m/atm/mo/tas/csiro_mk3_0/run1/tas_A1.nc" matches
     # "/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/mo/rsds/csiro_mk3_0/run1/rsds_A1.nc"
