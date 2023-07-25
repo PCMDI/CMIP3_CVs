@@ -26,6 +26,7 @@ PJD 12 Jul 2023     - Some reformatting to deal with date = [] instances
 PJD 19 Jul 2023     - Updated to deal with overwrites if CSIRO/NCAR formats found
 PJD 24 Jul 2023     - Add fileModTime to !noDateFile output (down to 77 files only in ipcc2_deleteme_July2020)
 PJD 24 Jul 2023     - Updated checkDate to return dateStr not None if 2003>year, year>2008
+PJD 25 Jul 2023     - Reverted checkDate, getFileStats now toggled to not check
                     TODO: should checkDate be relaxed to allow years>2008 to provide dateStamps? see /p/css03/
                     esgf_publish/cmip3/ipcc/20c3m/atm/mo/rsds/csiro_mk3_0/run1/rsds_A1.nc (history: 2005-01-12) &
                     scratch/ipcc2_deleteme_July2020/20c3m/atm/mo/tas/csiro_mk3_0/run1/tas_A1.nc (filesystem: 2009-10-21)
@@ -44,7 +45,8 @@ import re
 import xarray as xr
 from xcdat import open_dataset
 
-# import pdb
+import pdb
+
 # import shutil
 # import sys
 # import time
@@ -55,15 +57,18 @@ from xcdat import open_dataset
 def checkDate(dateStr):
     # assume 2022-10-05 format
     y, m, d = dateStr.split("-")
-    if not 2003 <= int(y) <= 2008:
-        print("year invalid:", y)
-        return dateStr  # return even if invalid, was None
+    # test month
     if not 1 <= int(m) <= 12:
         print("month invalid:", m)
         return None
+    # test day
     if not 1 <= int(d) <= 31:
         print("day invalid:", d)
         return None
+    # test year
+    if not 2003 <= int(y) <= 2008:
+        print("year invalid:", y)
+        return None  # dateStr  # return even if invalid, was None
 
     return dateStr
 
@@ -84,7 +89,7 @@ def getFileStats(filePath):
         fileSizeBytes = fileStats.st_size
         fileModTime = datetime.datetime.fromtimestamp(fileStats.st_mtime)
         fileModTime = makeDate(
-            fileModTime.year, fileModTime.month, fileModTime.day, True
+            fileModTime.year, fileModTime.month, fileModTime.day, False
         )
     else:
         print("File:", filePath, "not a valid file")
@@ -487,7 +492,7 @@ for cmPath in [
                         cm3["!_fileCount"] = count  # https://ascii.cl/
                     else:
                         print("if not date: noDateFileCount")
-                        # pdb.set_trace()
+                        pdb.set_trace()
                         noDateFileCount = noDateFileCount + 1
                         print("no date; filePath:", filePath)
                         cm3["!noDateFileCount"] = noDateFileCount
