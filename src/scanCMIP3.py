@@ -27,6 +27,7 @@ PJD 19 Jul 2023     - Updated to deal with overwrites if CSIRO/NCAR formats foun
 PJD 24 Jul 2023     - Add fileModTime to !noDateFile output (down to 77 files only in ipcc2_deleteme_July2020)
 PJD 24 Jul 2023     - Updated checkDate to return dateStr not None if 2003>year, year>2008
 PJD 25 Jul 2023     - Reverted checkDate, getFileStats now toggled to not check
+PJD 26 Jul 2023     - Updated to deal with 20c3m/atm/da/rlus/miub_echo_g/run1/rlus_A2_a42_0108-0147.nc
                     TODO: should checkDate be relaxed to allow years>2008 to provide dateStamps? see /p/css03/
                     esgf_publish/cmip3/ipcc/20c3m/atm/mo/rsds/csiro_mk3_0/run1/rsds_A1.nc (history: 2005-01-12) &
                     scratch/ipcc2_deleteme_July2020/20c3m/atm/mo/tas/csiro_mk3_0/run1/tas_A1.nc (filesystem: 2009-10-21)
@@ -166,6 +167,16 @@ def makeDRS(filePath, date):
     return destPath
 
 
+def setTimes(fh):
+    if "T" in fh.cf.axes:
+        startTime = getTimes(fh.time[0])
+        endTime = getTimes(fh.time[-1])
+    else:
+        startTime, endTime = [None for _ in range(2)]
+
+    return startTime, endTime
+
+
 # %% deal with paths
 # "/p/user_pub/climate_work/durack1/tmp/"
 os.chdir("/home/durack1/git/CMIP3_CVs/src")
@@ -235,6 +246,12 @@ bad = {
         "",
         [],
     ],
+    "/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/run1": [
+        "rlus_A2_a42_0108-0147.nc",  # badFile
+        "bad time dimension",  # fixStrInfo ; problems with 1979-08-07, 1990-03-07 to 15
+        "",  # fixStr
+        ["time"],  # badVars
+    ],
     "/p/css03/esgf_publish/cmip3/ipcc/cmip5/ozone/": [
         "",
         "",
@@ -256,13 +273,15 @@ cm3["!fileReadError"] = {}
 badFileCount, cmorCount, count, fileReadErrorCount, noDateFileCount = [
     0 for _ in range(5)
 ]
-# for cmPath in [
-#    "/p/css03/esgf_publish/cmip3",
-#    "/p/css03/scratch/ipcc2_deleteme_July2020",
-# ]:
 for cmPath in [
-    "/p/css03/scratch/ipcc2_deleteme_July2020/",
+    "/p/css03/esgf_publish/cmip3",
+    "/p/css03/scratch/ipcc2_deleteme_July2020",
 ]:
+    # for cmPath in [
+    #    "/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/",
+    # ]:
+    # "/p/css03/scratch/ipcc2_deleteme_July2020/",
+    # "/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/run1/rlus_A2_a42_0108-0147.nc",
     # "/p/css03/scratch/ipcc2_deleteme_July2020/20c3m/atm/mo/prc/csiro_mk3_5/run1/",
     # "/p/css03/scratch/ipcc2_deleteme_July2020/20c3m/atm/mo/tas/csiro_mk3_0/run1/tas_A1.nc" matches
     # "/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/mo/rsds/csiro_mk3_0/run1/rsds_A1.nc"
@@ -307,6 +326,7 @@ for cmPath in [
                     cm3["!badFileCount"] = badFileCount
                     cm3["!badFile"][badFileCount] = filePath
                 elif filePath[-3:] == ".nc":  # process all "good" files
+                    print("filePath[-3:] == .nc")
                     if c1 == 0:
                         cm3[root] = {}  # create dir entry for each file
                     elif root not in cm3.keys():
@@ -319,18 +339,28 @@ for cmPath in [
                     # open and deal with file issues
                     # pdb.set_trace()
                     try:
+                        print("try")
+                        print("badFile:", badFile)
+                        print("fixStrInfo:", fixStrInfo)
+                        print("fixStr:", fixStr)
+                        print("badVars:", badVars)
                         # wrap so bombs are caught in except
                         if fixStr is None and badVars is None and badFile is None:
+                            print("fixStr is None")
                             fh = open_dataset(filePath, use_cftime=True)
+                            startTime, endTime = setTimes(fh)
                         # Case bad root match, but not file
                         elif fixStrInfo and (badFile != fileName and not badFile == ""):
+                            print("fixStrInfo")
                             fh = open_dataset(filePath, use_cftime=True)
+                            startTime, endTime = setTimes(fh)
                         # Case bad root match, AND file
                         elif badVars and (fileName == badFile):  # badVars only
                             print("badVars:", badVars)
                             fh = xr.open_dataset(
                                 filePath, drop_variables=[badVars]
                             ).pipe(xr.decode_cf)
+                            startTime, endTime = setTimes(fh)
                         elif badFile == "":  # fixFunc for all files only - 9863
                             print("badFile == ''")
                             fh = (
@@ -338,9 +368,10 @@ for cmPath in [
                                 .pipe(fixFunc(fixStr, fixStrInfo))
                                 .pipe(xr.decode_cf)
                             )
+                            startTime, endTime = setTimes(fh)
                         # is there a need for fixFunc AND badVars?
                         elif badVars == [] and (fileName == badFile):
-                            # print("elif3")
+                            print("badVars == []")
                             # pdb.set_trace()
                             badFileCount = badFileCount + 1
                             print("badFile; filePath:", filePath)
@@ -355,11 +386,7 @@ for cmPath in [
                         cm3["!fileReadErrorCount"] = fileReadErrorCount
                         cm3["!fileReadError"][fileReadErrorCount] = filePath
                         continue
-                    if "T" in fh.cf.axes:
-                        startTime = getTimes(fh.time[0])
-                        endTime = getTimes(fh.time[-1])
-                    else:
-                        startTime, endTime = [None for _ in range(2)]
+                    # grab global attributes
                     attDict = fh.attrs
 
                     # impose filesystem file modification date
