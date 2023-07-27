@@ -271,6 +271,7 @@ for i, d in enumerate(dirList):
         # print(i, sha256, file, files[file]["filePath"])
         sha256s.append(sha256)
 
+"""
 # determine duplicates (deprecated)
 # seen = set()
 # dupes = [x for x in sha256s if x in seen or seen.add(x)]
@@ -286,13 +287,17 @@ for i, d in enumerate(dirList):
 #    "; dupe%:",
 #    "{:3.1f}".format((len(dupes) / len(sha256s)) * 100),
 # )
+"""
 
 sha256uniq = set(sha256s)
-# sha256uniqL = list(sha256uniq)
+sha256uniqL = list(sha256uniq)
+sha256uniqL.sort()  # create persistently ordered list
+# sets are inconsistent
 
 emptyDir = []
 filesToProcess = []
-for i, sha in enumerate(sha256uniq):  # 28499 trigger test
+dupeDict = {}
+for i, sha in enumerate(sha256uniqL):  # 28499 trigger test
     print("----------")
     print("{:06}".format(i), sha)
     count = 0
@@ -301,11 +306,12 @@ for i, sha in enumerate(sha256uniq):  # 28499 trigger test
     for d in dirList:
         # for each directory determine files
         files = a[d]
-        if files == []:
-            emptyDir.append(d)
-            print("emptyDir:", len(emptyDir), d)
-            pdb.set_trace()  # time.sleep(2)
-            continue
+        if len(files) == 0:
+            if d not in emptyDir:
+                emptyDir.append(d)
+                print("emptyDir:", len(emptyDir), d)
+                # pdb.set_trace()  # time.sleep(2)
+                continue
         # else if files exist, interrogate
         else:
             # loop through files - match with sha
@@ -313,14 +319,31 @@ for i, sha in enumerate(sha256uniq):  # 28499 trigger test
                 if files[file]["sha256"] == sha:
                     shaMatch.append(["file:", file, d])
                     count += 1
+    # if no matches, add single file, path
     if count == 1:
         filesToProcess.append([file, d])
+    # if no matches, add single file, path
+    # using min dir/len to weed out *dataX*, *deleteme* paths
     elif count > 1:
+        tmp = []
+        dupeDict[sha] = {}
         for x in range(0, len(shaMatch)):
             print(x, shaMatch[x])
-        shtPath = max(shaMatch, key=len)
-        filesToProcess.append(shtPath[1:])
+            # print("len:", len(shaMatch[x][2]), shaMatch[x][2])
+            tmp.append(len(shaMatch[x][2]))
+            # using sha key add files to dupeDict
+            dupeDict[sha][x] = shaMatch[x][1:]
+        shtInd = tmp.index(min(tmp))
+        # print("min:", shtInd, shaMatch[shtInd][2])
+        filesToProcess.append(shaMatch[shtInd][1:])
 
+print("len(emptyDir):      ", len(emptyDir))
+print("len(filesToProcess):", len(filesToProcess))
+print("len(dupeDict):      ", len(dupeDict))
+
+# assess emptyDir - can files be added back in
+# assess !noDateFile(77) - can model/exp/table matches be found
+# assess !fileReadError(9) - can kludges be found
 
 pdb.set_trace()
 
