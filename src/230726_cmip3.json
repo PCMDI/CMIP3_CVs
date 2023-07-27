@@ -1,0 +1,21 @@
+{
+    "!_cmorCount":1,
+    "!_fileCount":1,
+    "!badFile":{},
+    "!fileReadError":{},
+    "!noDateFile":{},
+    "/p/css03/esgf_publish/cmip3/ipcc/data7/slabcntl/ocn/mo/qflux/giss_model_e_r/run1/":{
+        "qflux_O1.GISS1.Slabcntl.amended.nc":{
+            "cmorVersion":"0.96",
+            "date":[
+                "2004-11-22",
+                "history"
+            ],
+            "filePath":"/p/css03/esgf_publish/cmip3/ipcc/data7/slabcntl/ocn/mo/qflux/giss_model_e_r/run1/qflux_O1.GISS1.Slabcntl.amended.nc",
+            "fileSizeBytes":4849120,
+            "sha256":"32b5766231aef4ba777309c70c2012bc8d6af74eeeba343ec13bcadc5abe9e5a",
+            "time0":"1-1-2",
+            "timeN":"2-1-1"
+        }
+    }
+}

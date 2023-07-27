@@ -216,41 +216,53 @@ monList = [
 
 # %% create exclude dirs
 bad = {
-    "/p/css03/esgf_publish/cmip3/ipcc/data3/sresa2/ice/mo/sic/ingv_echam4/run1": [
+    "/p/css03/esgf_publish/cmip3/ipcc/data3/sresa2/ice/mo/sic/ingv_echam4/run1/": [
         "",
         "fix bad time:units 20O1-1-1",
         "ds.time.attrs['units'] = 'days since 2001-01-01'",
         [],
     ],
-    "/p/css03/esgf_publish/cmip3/ipcc/data3/sresa2/ice/mo/sit/ingv_echam4/run1": [
+    "/p/css03/esgf_publish/cmip3/ipcc/data3/sresa2/ice/mo/sit/ingv_echam4/run1/": [
         "",
         "fix bad time:units 20O1-1-1",
         "ds.time.attrs['units'] = 'days since 2001-01-01'",
         [],
     ],
-    "/p/css03/esgf_publish/cmip3/ipcc/data8/picntrl/ocn/mo/rhopoto/ncar_ccsm3_0/run2": [
+    "/p/css03/esgf_publish/cmip3/ipcc/data8/picntrl/ocn/mo/rhopoto/ncar_ccsm3_0/run2/": [
         "rhopoto_O1.PIcntrl_2.CCSM.ocnm.0585-01_cat_0589-12.nc",
         "drop bad time_bnds",
         "",
         ["time_bnds"],
     ],
-    "/p/css03/esgf_publish/cmip3/ipcc/data16/sresa1b/atm/mo/rlds/mpi_echam5/run2": [
+    "/p/css03/esgf_publish/cmip3/ipcc/data16/sresa1b/atm/mo/rlds/mpi_echam5/run2/": [
         "rlds_A1.nc",
         "drop bad time_bnds",
         "",
         ["time_bnds"],
     ],
-    "/p/css03/esgf_publish/cmip3/ipcc/cfmip/2xco2/atm/da/pr/ukmo_hadsm4/run1": [
+    "/p/css03/esgf_publish/cmip3/ipcc/cfmip/2xco2/atm/da/pr/ukmo_hadsm4/run1/": [
         "pr_CF3.nc",
         "bad time dimension",
         "",
         [],
     ],
-    "/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/run1": [
+    "/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/run1/": [
         "rlus_A2_a42_0108-0147.nc",  # badFile
         "bad time dimension",  # fixStrInfo ; problems with 1979-08-07, 1990-03-07 to 15
         "",  # fixStr
         ["time"],  # badVars
+    ],
+    "/p/css03/esgf_publish/cmip3/ipcc/data7/amip/atm/mo/tro3/miroc3_2_medres/run1/": [
+        "tro3_A1.nc",  # badFile
+        "bad time dimension",  # fixStrInfo ; -1 times, comment says amip period not -1
+        "",  # fixStr
+        ["time"],  # badVars
+    ],
+    "/p/css03/esgf_publish/cmip3/ipcc/data7/slabcntl/ocn/mo/qflux/giss_model_e_r/run1/": [
+        "",  # "qflux_O1.GISS1.Slabcntl.amended.nc",
+        "fix bad time:units = days since 1-1",
+        "ds.time.attrs['units'] = 'days since 0001-01-01'",
+        [],
     ],
     "/p/css03/esgf_publish/cmip3/ipcc/cmip5/ozone/": [
         "",
@@ -273,13 +285,15 @@ cm3["!fileReadError"] = {}
 badFileCount, cmorCount, count, fileReadErrorCount, noDateFileCount = [
     0 for _ in range(5)
 ]
+# for cmPath in [
+#    "/p/css03/esgf_publish/cmip3",
+#    "/p/css03/scratch/ipcc2_deleteme_July2020",
+# ]:
 for cmPath in [
-    "/p/css03/esgf_publish/cmip3",
-    "/p/css03/scratch/ipcc2_deleteme_July2020",
+    "/p/css03/esgf_publish/cmip3/ipcc/data7/slabcntl/ocn/mo/qflux/giss_model_e_r/run1/",
 ]:
-    # for cmPath in [
-    #    "/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/",
-    # ]:
+    # "/p/css03/esgf_publish/cmip3/ipcc/data7/amip/atm/mo/tro3/miroc3_2_medres/run1"
+    # # "/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/",
     # "/p/css03/scratch/ipcc2_deleteme_July2020/",
     # "/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/run1/rlus_A2_a42_0108-0147.nc",
     # "/p/css03/scratch/ipcc2_deleteme_July2020/20c3m/atm/mo/prc/csiro_mk3_5/run1/",
@@ -346,17 +360,18 @@ for cmPath in [
                         print("badVars:", badVars)
                         # wrap so bombs are caught in except
                         if fixStr is None and badVars is None and badFile is None:
-                            print("fixStr is None")
+                            print("fixStr/badVars/bafFile is None")
                             fh = open_dataset(filePath, use_cftime=True)
                             startTime, endTime = setTimes(fh)
+                            # pdb.set_trace()
                         # Case bad root match, but not file
                         elif fixStrInfo and (badFile != fileName and not badFile == ""):
-                            print("fixStrInfo")
+                            print("elif fixStrInfo")
                             fh = open_dataset(filePath, use_cftime=True)
                             startTime, endTime = setTimes(fh)
                         # Case bad root match, AND file
                         elif badVars and (fileName == badFile):  # badVars only
-                            print("badVars:", badVars)
+                            print("elif badVars:", badVars)
                             fh = xr.open_dataset(
                                 filePath, drop_variables=[badVars]
                             ).pipe(xr.decode_cf)
