@@ -341,7 +341,7 @@ print("len(emptyDir):      ", len(emptyDir))
 print("len(filesToProcess):", len(filesToProcess))
 print("len(dupeDict):      ", len(dupeDict))
 
-# assess emptyDir - can files be added back in
+# assess emptyDir - can files be added back in - use for scanCMIP3 test dirs
 # assess !noDateFile(77) - can model/exp/table matches be found
 # assess !fileReadError(9) - can kludges be found
 
