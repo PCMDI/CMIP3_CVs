@@ -48,8 +48,6 @@ def makeDate(year, month, day, check):
     date = "-".join([str(year), str(month), str(day)])
     # print("makeDate: date =", date)
     # pdb.set_trace()
-    if check:
-        date = checkDate(date)
 
     return date
 
@@ -88,5 +86,3 @@ for cmPath in [
                         pdb.set_trace()
 
                 count = count + 1  # file counter
-
-# Now order values by sha256
