@@ -6,10 +6,13 @@ Created on Mon Jul 24 15:14:34 2023
 PJD 24 Jul 2023     - Written to organize CMIP3 data using CMIP6 DRS
 
 Plans
-1. Process all valid keys
-2. Process all !noDateFile entries (using similar inst/mod/exp/table contributions)
-3. Process all !fileReadError entries (is there an xarray pipe that fixes it)
-4. Process/archive all !badFile entries (along with BCC-CM1, which was unpublished? - Karl)
+1. Generate keys for all files - scanCMIP3-sha256.py
+2. Determine keys to process
+3. Process all valid keys
+4. Process all !noDateFile entries (using similar inst/mod/exp/table contributions)
+5. Process all !fileReadError entries (is there an xarray pipe that fixes it)
+6. Process/archive all !badFile entries (along with BCC-CM1, which was unpublished? - Karl)
+    - Xujing (Steve K) was involved in CMIP3/ISCCP data generation?
 
 @author: durack1
 """
@@ -18,219 +21,19 @@ Plans
 import json
 import os
 import pdb
-import re
 
-# import time
 
 # %% function defs
-
-
-def fixSource(sourceId):
-    # switch case
-    sourceId = sourceId.upper()
-    sourceId = sourceId.replace("HAD", "Had")  # fix Had
-    sourceId = sourceId.replace("MK3", "Mk3")  # fix Mk3
-    sourceId = sourceId.replace("CCCMA", "CCCma")  # fix CCCMA
-    # switch underscores
-    sourceId = sourceId.replace("_", "-")
-
-    return sourceId
-
-
-def formatDate(dateStr):
-    # assume 2023-7-26
-    y, m, d = dateStr.split("-")
-    # generate 20230726
-    dateStr = "".join(
-        ["{:04}".format(int(y)), "{:02}".format(int(m)), "{:02}".format(int(d))]
-    )
-
-    return dateStr
-
-
-def matchExperiment(pathBits):
-    # define exps
-    experiments = [
-        "1pctto2x",
-        "1pctto4x",
-        "20c3m",
-        "2xco2",
-        "amip",
-        "commit",
-        "pdcntrl",
-        "picntrl",
-        "slabcntl",
-        "sresa1b",
-        "sresa2",
-        "sresb1",
-    ]
-    cfmip = ["2xco2", "slabcntl"]
-    scenariomip = ["sresa1b", "sresa2", "sresb1"]
-    expId = [el for el in pathBits if el in experiments]
-    if not len(expId):
-        pdb.set_trace()
-    if expId in cfmip:
-        actId = "CFMIP"
-    elif expId in scenariomip:
-        actId = "ScenarioMIP"
-    else:
-        actId = "CMIP"
-
-    return expId, actId
-
-
-def matchFrequency(pathBits):
-    frequencies = ["3h", "da", "fixed", "mo", "yr"]
-    freqId = [el for el in pathBits if el in frequencies]
-    if not len(freqId):
-        pdb.set_trace()
-    # get var, src_id
-    freqInd = pathBits.index(freqId[0])
-    varId = pathBits[freqInd + 1]
-    srcId = pathBits[freqInd + 2]
-
-    return freqId, varId, srcId
-
-
-def matchInst(srcId):
-    # see details at https://pcmdi.llnl.gov/ipcc/model_documentation/ipcc_model_documentation.html
-    # and also https://www.ipcc-data.org/auto/ar4/
-    if srcId == "BCC-CM1":
-        instId = "BCC"  # retracted immediately after submission
-    elif srcId == "BCCR-BCM2-0":
-        instId = "NCC"
-        # " BCCR (Bjerknes Centre for Climate Research)\n",
-        # " University of Bergen, Norway (www.bjerknes.uib.no)\n",
-        # " NERSC (Nansen Environmental and Remote Sensing Center, Norway (www.nersc.no)\n",
-        # " GFI (Geophysical Institute) University of Bergen, Norway (www.gfi.uib.no)" ;
-    elif srcId == "BMRC1":
-        instId = "BMRC"  # (Aust) Bureau of Meteorology Research Centre
-    elif srcId in ["CCCma-AGCM4-0", "CCCma-CGCM3-1", "CCCma-CGCM3-1-T63"]:
-        instId = "CCCma"
-    elif srcId == "CNRM-CM3":
-        instId = "CNRM-CERFACS"
-    elif srcId in ["CSIRO-Mk3-0", "CSIRO-Mk3-5"]:
-        instId = "CSIRO"
-    elif srcId in ["GFDL-CM2-0", "GFDL-CM2-1", "GFDL-MLM2-1"]:
-        instId = "NOAA-GFDL"
-    elif srcId in ["GISS-AOM", "GISS-MODEL-E-H", "GISS-MODEL-E-R"]:
-        instId = "NASA-GISS"
-    elif srcId == "IAP-FGOALS1-0-G":
-        instId = (
-            "CAS"  # IAP - Institute of Atmospheric Physics, Chinese Academy of Sciences
-        )
-    elif srcId == "INGV-ECHAM4":
-        instId = "CMCC"
-        # Istituto Nazionale di Geofisica e Vulcanologia ((INGV) and
-        # Numerical Applications and Scenarios Division, CMCC
-        # https://www.cmcc.it/wp-content/uploads/2012/08/rp0015-ans-02-2007-1.pdf
-    elif srcId == "INMCM3-0":
-        instId = "INM"
-    elif srcId == "IPSL-CM4":
-        instId = "IPSL"
-    elif srcId in ["MIROC-HISENS", "MIROC-LOSENS", "MIROC3-2-HIRES", "MIROC3-2-MEDRES"]:
-        instId = "MIROC"
-    elif srcId == "MIUB-ECHO-G":
-        instId = "MIUB"  # Meteorological Institute of the University of Bonn (MIUB)
-    elif srcId == "MPI-ECHAM5":
-        instId = "MPI-M"
-    elif srcId == "MRI-CGCM2-3-2A":
-        instId = "MRI"
-    elif srcId in ["NCAR-CCSM3-0", "NCAR-PCM1"]:
-        instId = "NCAR"
-    elif srcId == "UIUC":
-        instId = (
-            "UIUC"  # University of Illinois at Urbana-Champaign - CFMIP contributor
-        )
-    elif srcId in [
-        "UKMO-HadCM3",
-        "UKMO-HadGEM1",
-        "UKMO-HadGSM1",
-        "UKMO-HadSM3",
-        "UKMO-HadSM4",
-    ]:
-        instId = "MOHC"
-    else:
-        instId = None
-
-    return instId
-
-
-def matchRealm(pathBits):
-    realms = ["atm", "ice", "land", "ocn"]
-    realm = [el for el in pathBits if el in realms]
-    if not len(realm):
-        pdb.set_trace()
-
-    return realm
-
-
-def matchRun(pathBits):
-    r = re.compile(r"run[0-9]")
-    run = list(filter(r.match, pathBits))
-    if not len(run):
-        pdb.set_trace()
-
-    return run
-
-
-def matchTable(fileName):
-    tables = [
-        "A1",  # https://github.com/PCMDI/cmip3-cmor-tables
-        "A1A",
-        "A1B",
-        "A1C",
-        "A1D",
-        "A1E",
-        "A1F",
-        "A2",
-        "A2A",
-        "A2B",
-        "A3",
-        "A4",
-        "A5",
-        "O1",
-        "O1A",
-        "O1B",
-        "O1C",
-        "O1D",
-        "O1E",
-        "O1F",
-        "O1G",
-        "CF1",  # https://github.com/PCMDI/cfmip1-cmor-tables
-        "CF1A",
-        "CF1B",
-        "CF1C",
-        "CF1D",
-        "CF1E",
-        "CF2",
-        "CF2A",
-        "CF2B",
-        "CF3",
-        "CF3A",
-        "CF3B",
-        "CF3C",
-        "CF3D",
-        "CF4",
-    ]
-    # first merge multiple files
-    fileName = "".join(fileName)
-    # split "_"
-    fileBits = [x.upper() for x in fileName.split("_")]
-    print("fileBits1:", fileBits)
-    # split "."
-    fileBits = [item.split(".") for item in fileBits]
-    print("fileBits2:", fileBits)
-    # flatten
-    fileBits = [el for innerList in fileBits for el in innerList]
-    print("fileBits3:", fileBits)
-    tableId = [el for el in fileBits if el in tables]
-
-    if not len(tableId):
-        print("not len(tableId):", tableId)
-        pdb.set_trace()
-
-    return tableId[0]
+from CMIP3Lib import (
+    fixSource,
+    formatDate,
+    matchExperiment,
+    matchFrequency,
+    matchInst,
+    matchRealm,
+    matchRun,
+    matchTable,
+)
 
 
 # %% load data
