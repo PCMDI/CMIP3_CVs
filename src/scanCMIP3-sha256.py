@@ -7,6 +7,9 @@ PJD  7 Aug 2023     - Written to collect file information allowing
                       binary identical CMIP3 copies to be excluded
 PJD  7 Aug 2023     - Moved function defs to CMIP3Lib
 PJD  8 Aug 2023     - Added writeJson function
+PJD 11 Aug 2023     - Added additional dob vars
+                    - TODO: think about parallelisation
+                    https://stackoverflow.com/questions/11920490/how-do-i-run-os-walk-in-parallel-in-python
 
 @author: durack1
 """
@@ -68,6 +71,11 @@ for cmPath in cm3Paths:
             # write json if count
             if ~np.mod(count, 10):
                 writeJson(fileDict, "cmip3-sha256", timeFormatDir)
+
+# determine counts
+shaCount = len(fileDict) - 1  # -1 as "!_timeBegin" exists
+fileDict["!_shaCount"] = shaCount  # 98349
+fileDict["!_fileCount"] = count + 1  # 137096 (0-indexed)
 
 # cleanup
 timeEnd = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
