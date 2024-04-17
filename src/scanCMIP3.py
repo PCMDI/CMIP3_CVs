@@ -514,7 +514,8 @@ for cmPath in paths:
                                     )
                                 elif era == "CMIP6":
                                     print("CMOR3 strings need defining, exiting")
-                                    sys.exit()
+                                    pdb.set_trace()
+                                    #sys.exit()
                                 # Proceed with globalAtts
                                 cmorCount = cmorCount + 1
                                 if "cmor_version" in fh.attrs.keys():
