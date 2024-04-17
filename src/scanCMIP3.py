@@ -471,7 +471,9 @@ for cmPath in paths:
                                 day = date[0]
                                 mon = "{:02d}".format(monList.index(date[1]) + 1)
                                 yr = date[-1]
-                                date = makeDate(yr, mon, day, startYr, endYr, check=True)
+                                date = makeDate(
+                                    yr, mon, day, startYr, endYr, check=True
+                                )
                                 dateFound = True
                                 dateFoundAtt = att
                             # Deal with CMOR matches
@@ -484,26 +486,35 @@ for cmPath in paths:
                                         r"\d{1,2}/\d{1,2}/\d{2,4}", attStr
                                     )
                                     date = date[0].split("/")
+                                    date = makeDate(
+                                        date[-1],
+                                        date[0],
+                                        date[1],
+                                        startYr,
+                                        endYr,
+                                        check=True,
+                                    )
                                 elif era == "CMIP5":  # CMOR2
                                     # assuming YYYY-MM-DDTHH:MM:SSZ e.g. ..from cfsv2_decadal runs. 2013-03-12T17:53:48Z CMOR rewrote data to comply with CF standards and CMIP5 requirements.
-                                    attStrInd = attStr.index("Z CMOR rewrote data to comply")
+                                    attStrInd = attStr.index(
+                                        "Z CMOR rewrote data to comply"
+                                    )
                                     attStr = attStr[attStrInd - 19 : attStrInd]
                                     date = re.findall(
                                         r"\d{1,4}-\d{1,2}-\d{1,2}", attStr
                                     )
                                     date = date[0].split("-")
-                                elif era == "CMIP6":
-                                    print("CMOR3 strings need defining, exiting")
-                                    sys.exit()
-                                pdb.set_trace()
-                                date = makeDate(
-                                    date[-1],
+                                    date = makeDate(
                                     date[0],
                                     date[1],
+                                    date[2],
                                     startYr,
                                     endYr,
                                     check=True,
                                 )
+                                elif era == "CMIP6":
+                                    print("CMOR3 strings need defining, exiting")
+                                    sys.exit()
                                 print("date:", date)
                                 pdb.set_trace()
                                 cmorCount = cmorCount + 1
