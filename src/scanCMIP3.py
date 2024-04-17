@@ -593,7 +593,7 @@ for cmPath in paths:
                                     dateFound = True
                                     dateFoundAtt = att
                                 # CMIP6 NCAR CESM2 format r"\d{1,4}-\d{1,2}-\d{1,2}T\d{1,2}:\d{1,2}:\d{1,2}Z"
-                                if re.match(
+                                if date and re.match(
                                     r"\d{1,4}-\d{1,2}-\d{1,2}T\d{1,2}:\d{1,2}:\d{1,2}Z",
                                     date,
                                 ):
