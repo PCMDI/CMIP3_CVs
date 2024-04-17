@@ -290,7 +290,7 @@ destDir = "CMIP3"  # "/a/"
 # %% create lookup lists
 attList = [
     "cmor_version",
-    "creation_date"  # CMIP6 NCAR CESM2
+    "creation_date",  # CMIP6 NCAR CESM2
     "comment",
     "contact",
     "date",
