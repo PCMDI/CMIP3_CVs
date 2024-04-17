@@ -599,8 +599,15 @@ for cmPath in paths:
                                 ):
                                     date = date[0].split("T")
                                     print(date)
-                                    date = date.split("-")
-                                    print(date)
+                                    date = date[0].split("-")
+                                    yr = date[0]
+                                    mon = date[1]
+                                    day = date[2]
+                                    date = makeDate(
+                                        yr, mon, day, startYr, endYr, check=True
+                                    )
+                                    dateFound = True
+                                    dateFoundAtt = att
                                     pdb.set_trace()
                     # if a valid date start saving pieces
                     if date:
