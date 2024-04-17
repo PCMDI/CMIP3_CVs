@@ -474,6 +474,9 @@ for cmPath in paths:
                                 dateFound = True
                                 dateFoundAtt = att
                             # Deal with CMOR matches
+                            print(attStr)
+                            pdb.set_trace()
+
                             if "CMOR rewrote data to comply" in attStr:
                                 attStrInd = attStr.index(" At ")
                                 attStr = attStr[attStrInd:]
