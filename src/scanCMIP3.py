@@ -18,6 +18,7 @@ PJD 29 Jun 2023     - Updated with getSha256
 PJD 30 Jun 2023     - Updated to scan additional global_atts: contact, experiment_id, institution, realization, source, table_id, comment
 PJD 30 Jun 2023     - Added getFileSize
 PJD 30 Jun 2023     - Removed table_id as this has file generation date/time - will provide erronous timestamp
+PJD 16 Apr 2024     - Update to attempt CMIP5/6 scanning
                     TODO: generalize for global attributes that serve CMIP5 and 6 datasets
                     TODO: add time start/stop to fileNames that exclude them
                     TODO: table mappings O1 = Omon?, O1e?
@@ -25,17 +26,62 @@ PJD 30 Jun 2023     - Removed table_id as this has file generation date/time - w
 @author: durack1
 """
 
+import argparse
 import datetime
 import hashlib
 import json
 import os
 import re
-# import shutil
 import xarray as xr
 from xcdat import open_dataset
-import pdb
-# import sys
+
+# import pdb
+# import shutil
+import sys
+
 # import time
+
+# %% assign which CMIP phase you are targeting - set years and paths
+cmDict = {}
+cmDict["CMIP3"] = {}
+cmDict["CMIP3"]["startYr"] = 2003
+cmDict["CMIP3"]["endYr"] = 2008
+cmDict["CMIP3"]["paths"] = [
+    "/p/css03/esgf_publish/cmip3",
+    "/p/css03/scratch/ipcc2_deleteme_July2020",
+]
+cmDict["CMIP5"] = {}
+cmDict["CMIP5"]["startYr"] = 2008
+cmDict["CMIP5"]["endYr"] = 2017
+cmDict["CMIP5"]["paths"] = [
+    "/p/css03/cmip5_css01/data/cmip5/output1",
+    "/p/css03/cmip5_css02/data/cmip5/output1",
+    "/p/css03/cmip5_css02/data/cmip5/output2",
+    "/p/css03/esgf_publish/cmip5",
+]
+cmDict["CMIP6"] = {}
+cmDict["CMIP6"]["startYr"] = 2018
+cmDict["CMIP6"]["endYr"] = 2026
+cmDict["CMIP6"]["paths"] = [
+    "/p/css03/esgf_publish/CMIP6",
+    "/p/css03/scratch/CMIP6/",
+]
+
+# add runtime argument
+parser = argparse.ArgumentParser(description="Obtain CMIP era being scanned")
+parser.add_argument(
+    "-e",
+    "--era",
+    help="Integer indicating CMIP era",
+    required=True,
+    choices=["3", "5", "6"],
+)
+args = vars(parser.parse_args())
+era = "".join(["CMIP", args["era"]])
+startYr = cmDict[era]["startYr"]
+endYr = cmDict[era]["endYr"]
+paths = cmDict[era]["paths"]
+print(era, startYr, endYr)
 
 # %% function defs
 
@@ -78,10 +124,10 @@ def copyStuff(root, dirs, destDir, vers):
 """
 
 
-def checkDate(dateStr):
+def checkDate(dateStr, startYr, endYr):
     # assume 2022-10-05 format
     y, m, d = dateStr.split("-")
-    if not 2003 <= int(y) <= 2008:
+    if not startYr <= int(y) <= endYr:
         print("year invalid:", y)
         return None
     if not 1 <= int(m) <= 12:
@@ -100,6 +146,7 @@ def fixFunc(fixStr, fixStrInfo):
         exec(fixStr)  # ds.time.encoding["units"] = "days since 2001-1-1"
 
         return ds
+
     return fix
 
 
@@ -109,7 +156,7 @@ def getFileSize(filePath):
         fileSizeBytes = fileStats.st_size
     else:
         print("File:", filePath, "not a valid file")
-        fileSizeBytes = 0.
+        fileSizeBytes = 0.0
 
     return fileSizeBytes
 
@@ -151,8 +198,7 @@ def makeDRS(filePath, date):
     gridLabel = "gu"
     # filePath bits
     sourceBits = filePath.split("/")
-    experiments = {"pdcntrl", "picntrl",
-                   "20c3m", "sresa1b", "sresa2", "sresb1"}
+    experiments = {"pdcntrl", "picntrl", "20c3m", "sresa1b", "sresa2", "sresb1"}
     # https://github.com/PCMDI/CMIP3_CVs/blob/main/src/writeJson.py#L63-L76
     experimentId = sourceBits[3]
     sourceId = sourceBits[7]
@@ -166,8 +212,18 @@ def makeDRS(filePath, date):
     d = date.split("-")
     versionId = "".join(["v", d[0], d[1], d[2]])
     # composite
-    destPath = os.path.join(mipEra, activityId, institutionId, sourceId,
-                            experimentId, ripf, tableId, varId, gridLabel, versionId)
+    destPath = os.path.join(
+        mipEra,
+        activityId,
+        institutionId,
+        sourceId,
+        experimentId,
+        ripf,
+        tableId,
+        varId,
+        gridLabel,
+        versionId,
+    )
 
     return destPath
 
@@ -231,19 +287,66 @@ destDir = "CMIP3"  # "/a/"
 # os.makedirs(destDir)
 
 # %% create lookup lists
-attList = ["cmor_version", "comment", "contact", "date", "experiment_id", "forcing",
-           "history", "institution", "realization", "source"]
+attList = [
+    "cmor_version",
+    "comment",
+    "contact",
+    "date",
+    "experiment_id",
+    "forcing",
+    "history",
+    "institution",
+    "realization",
+    "source",
+]
 # "creation_date","license","tracking_id", "table_id"
-monList = ["Jan", "Feb", "Mar", "Apr", "May",
-           "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+monList = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+]
 
 # %% create exclude dirs
 bad = {
-    "/p/css03/esgf_publish/cmip3/ipcc/data3/sresa2/ice/mo/sic/ingv_echam4/run1": ["", "fix bad time:units 20O1-1-1", "ds.time.attrs['units'] = 'days since 2001-01-01'", []],
-    "/p/css03/esgf_publish/cmip3/ipcc/data3/sresa2/ice/mo/sit/ingv_echam4/run1": ["", "fix bad time:units 20O1-1-1", "ds.time.attrs['units'] = 'days since 2001-01-01'", []],
-    "/p/css03/esgf_publish/cmip3/ipcc/data8/picntrl/ocn/mo/rhopoto/ncar_ccsm3_0/run2": ["rhopoto_O1.PIcntrl_2.CCSM.ocnm.0585-01_cat_0589-12.nc", "drop bad time_bnds", "", ["time_bnds"]],
-    "/p/css03/esgf_publish/cmip3/ipcc/data16/sresa1b/atm/mo/rlds/mpi_echam5/run2": ["rlds_A1.nc", "drop bad time_bnds", "", ["time_bnds"]],
-    "/p/css03/esgf_publish/cmip3/ipcc/cfmip/2xco2/atm/da/pr/ukmo_hadsm4/run1": ["pr_CF3.nc", "bad time dimension", "", []],
+    "/p/css03/esgf_publish/cmip3/ipcc/data3/sresa2/ice/mo/sic/ingv_echam4/run1": [
+        "",
+        "fix bad time:units 20O1-1-1",
+        "ds.time.attrs['units'] = 'days since 2001-01-01'",
+        [],
+    ],
+    "/p/css03/esgf_publish/cmip3/ipcc/data3/sresa2/ice/mo/sit/ingv_echam4/run1": [
+        "",
+        "fix bad time:units 20O1-1-1",
+        "ds.time.attrs['units'] = 'days since 2001-01-01'",
+        [],
+    ],
+    "/p/css03/esgf_publish/cmip3/ipcc/data8/picntrl/ocn/mo/rhopoto/ncar_ccsm3_0/run2": [
+        "rhopoto_O1.PIcntrl_2.CCSM.ocnm.0585-01_cat_0589-12.nc",
+        "drop bad time_bnds",
+        "",
+        ["time_bnds"],
+    ],
+    "/p/css03/esgf_publish/cmip3/ipcc/data16/sresa1b/atm/mo/rlds/mpi_echam5/run2": [
+        "rlds_A1.nc",
+        "drop bad time_bnds",
+        "",
+        ["time_bnds"],
+    ],
+    "/p/css03/esgf_publish/cmip3/ipcc/cfmip/2xco2/atm/da/pr/ukmo_hadsm4/run1": [
+        "pr_CF3.nc",
+        "bad time dimension",
+        "",
+        [],
+    ],
     # "/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/run1": ["rlus_A2_a42_0108-0147.nc", "bad time dimension values", "", []],
     # /p/css03/esgf_publish/cmip3/ipcc/cfmip/2xco2/atm/mo/rsut/mpi_echam5/run1/rsut_CF1.nc
 }
@@ -257,8 +360,9 @@ cm3["!badFile"] = {}
 cm3["!noDateFile"] = {}
 cm3["!fileReadError"] = {}
 badFileCount, cmorCount, count, fileReadErrorCount, noDateFileCount = [
-    0 for _ in range(5)]
-for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_July2020"]:
+    0 for _ in range(5)
+]
+for cmPath in paths:
     # for cmPath in ["/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/run1"]:  # bug hunting
     # for cmPath in list(bad.keys()):
     for root, dirs, files in os.walk(cmPath):
@@ -266,8 +370,7 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
         # Add dirs to exclude;
         [dirs.remove(d) for d in list(dirs) if d in excludeDirs]
         if root.split("/")[-1] == "ipcc":
-            [dirs.remove(d) for d in list(dirs)
-             if d in excludeDirs2]  # catch ipcc/ipcc
+            [dirs.remove(d) for d in list(dirs) if d in excludeDirs2]  # catch ipcc/ipcc
         if root in list(bad.keys()):
             # Weed out bad paths/files
             # print("in here!")
@@ -293,7 +396,7 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                 # get fileSizeBytes
                 fileSizeBytes = getFileSize(filePath)
                 if filePath[-3:] != ".nc":  # deal with *.nc.bad files
-                    badFileCount = badFileCount+1
+                    badFileCount = badFileCount + 1
                     print("no date; filePath:", filePath)
                     cm3["!badFileCount"] = badFileCount
                     cm3["!badFile"][badFileCount] = filePath
@@ -304,25 +407,24 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                         # create dir entry for each file, if first file bad
                         cm3[root] = {}
                     cmorVersion, dateFound = [
-                        False for _ in range(2)]  # set for each file
-                    count = count+1  # file counter
+                        False for _ in range(2)
+                    ]  # set for each file
+                    count = count + 1  # file counter
                     # open and deal with file issues
                     # pdb.set_trace()
                     try:
                         # wrap so bombs are caught in except
-                        if (fixStr == None and badVars == None and badFile == None):
+                        if fixStr == None and badVars == None and badFile == None:
                             fh = open_dataset(filePath, use_cftime=True)
                         # Case bad root match, but not file
-                        elif fixStrInfo and (badFile != fileName and not badFile == ''):
+                        elif fixStrInfo and (badFile != fileName and not badFile == ""):
                             fh = open_dataset(filePath, use_cftime=True)
                         # Case bad root match, AND file
                         elif badVars and (fileName == badFile):  # badVars only
                             print("badVars:", badVars)
-                            fh = (
-                                xr.open_dataset(
-                                    filePath, drop_variables=[badVars])
-                                .pipe(xr.decode_cf)
-                            )
+                            fh = xr.open_dataset(
+                                filePath, drop_variables=[badVars]
+                            ).pipe(xr.decode_cf)
                         elif badFile == "":  # fixFunc for all files only - 9863
                             print("badFile == ''")
                             fh = (
@@ -334,15 +436,15 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                         elif badVars == [] and (fileName == badFile):
                             # print("elif3")
                             # pdb.set_trace()
-                            badFileCount = badFileCount+1
+                            badFileCount = badFileCount + 1
                             print("badFile; filePath:", filePath)
                             cm3["!badFileCount"] = badFileCount
                             cm3["!badFile"][badFileCount] = filePath
                             continue
                     except:
-                        print('except')
+                        print("except")
                         # pdb.set_trace()
-                        fileReadErrorCount = fileReadErrorCount+1
+                        fileReadErrorCount = fileReadErrorCount + 1
                         print("fileReadError; filePath:", filePath)
                         cm3["!fileReadErrorCount"] = fileReadErrorCount
                         cm3["!fileReadError"][fileReadErrorCount] = filePath
@@ -366,7 +468,7 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                                 date = attStr
                                 date = date.split("-")
                                 day = date[0]
-                                mon = "{:02d}".format(monList.index(date[1])+1)
+                                mon = "{:02d}".format(monList.index(date[1]) + 1)
                                 yr = date[-1]
                                 date = makeDate(yr, mon, day, check=True)
                                 dateFound = True
@@ -375,41 +477,44 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                             if "CMOR rewrote data to comply" in attStr:
                                 attStrInd = attStr.index(" At ")
                                 attStr = attStr[attStrInd:]
-                                date = re.findall(
-                                    r"\d{1,2}/\d{1,2}/\d{2,4}", attStr)
+                                date = re.findall(r"\d{1,2}/\d{1,2}/\d{2,4}", attStr)
                                 date = date[0].split("/")
                                 # assuming mm/dd/yyyy e.g. At 20:53:22 on 06/28/2005, CMOR rewrote data to comply with CF standards and IPCC Fourth Assessment requirements
-                                date = makeDate(
-                                    date[-1], date[0], date[1], check=True)
-                                cmorCount = cmorCount+1
+                                date = makeDate(date[-1], date[0], date[1], check=True)
+                                cmorCount = cmorCount + 1
                                 if "cmor_version" in fh.attrs.keys():
                                     cmorVersion = fh.attrs["cmor_version"]
                                 dateFound = True
                                 dateFoundAtt = att
                             # Deal with regex matches
-                            dateReg = [r"[0-3][0-9]/[0-3][0-9]/(?:[0-9][0-9])?[0-9][0-9]",
-                                       r"year:[0-9]{4}:month:[0-9]{2}:day:[0-9]{2}",
-                                       # r"Fri Aug  5 19:23:54 MDT 2005"
-                                       r"[a-zA-Z]{3}\s[a-zA-Z]{3}\s{1,2}\d{1,2}\s\d{1,2}.\d{2}.\d{2}\s[A-Z]{3}\s\d{4}",
-                                       ]
+                            dateReg = [
+                                r"[0-3][0-9]/[0-3][0-9]/(?:[0-9][0-9])?[0-9][0-9]",
+                                r"year:[0-9]{4}:month:[0-9]{2}:day:[0-9]{2}",
+                                # r"Fri Aug  5 19:23:54 MDT 2005"
+                                r"[a-zA-Z]{3}\s[a-zA-Z]{3}\s{1,2}\d{1,2}\s\d{1,2}.\d{2}.\d{2}\s[A-Z]{3}\s\d{4}",
+                            ]
                             for dateFormat in dateReg:
                                 if dateFound:
                                     continue
                                 date = re.findall(dateFormat, attStr)
                                 # timezones
-                                timeZones = ["EDT", "EST",
-                                             "MDT", "MST", "PDT", "PST"]
+                                timeZones = ["EDT", "EST", "MDT", "MST", "PDT", "PST"]
                                 # CSIRO format - r"year:[0-9]{4}:month:[0-9]{2}:day:[0-9]{2}"
                                 if date and ("year" in date[0]):
-                                    date = date[0].replace("year:", "").replace(
-                                        ":month:", "-").replace(":day:", "-")
+                                    date = (
+                                        date[0]
+                                        .replace("year:", "")
+                                        .replace(":month:", "-")
+                                        .replace(":day:", "-")
+                                    )
                                     dateFound = True
                                     dateFoundAtt = att
                                 # NCAR CCSM format - r"[a-zA-Z]{3}\s[a-zA-Z]{3}\s{1,2}\d{1,2}\s\d{1,2}.\d{2}.\d{2}\s[A-Z]{3}\s\d{4}"
-                                elif date and any(zone in date[0] for zone in timeZones):
+                                elif date and any(
+                                    zone in date[0] for zone in timeZones
+                                ):
                                     date = date[0].split(" ")
-                                    mon = "{:02d}".format(
-                                        monList.index(date[1])+1)
+                                    mon = "{:02d}".format(monList.index(date[1]) + 1)
                                     yr = date[-1]
                                     if len(date) == 6:
                                         day = date[2]
@@ -430,16 +535,18 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
                         cm3[root][fileName]["filePath"] = filePath
                         cm3[root][fileName]["fileSizeBytes"] = fileSizeBytes
                         if cmorVersion:
-                            cm3[root][fileName]["cmorVersion"] = str(
-                                cmorVersion)
+                            cm3[root][fileName]["cmorVersion"] = str(cmorVersion)
                         cm3["!_cmorCount"] = cmorCount
                         cm3["!_fileCount"] = count  # https://ascii.cl/
                     if not date:
-                        noDateFileCount = noDateFileCount+1
+                        noDateFileCount = noDateFileCount + 1
                         print("no date; filePath:", filePath)
                         cm3["!noDateFileCount"] = noDateFileCount
                         cm3["!noDateFile"][noDateFileCount] = [
-                            filePath, sha256, fileSizeBytes]
+                            filePath,
+                            sha256,
+                            fileSizeBytes,
+                        ]
                     print("date:", date)
 
                     # close open file
@@ -448,7 +555,7 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
         # save dictionary ## if files
         timeNow = datetime.datetime.now()
         timeFormatDir = timeNow.strftime("%y%m%d")
-        outFile = "_".join([timeFormatDir, "cmip3.json"])
+        outFile = "_".join([timeFormatDir, ".".join([era, "json"])])
         if os.path.exists(outFile):
             os.remove(outFile)
         print("writing:", outFile)
@@ -463,7 +570,7 @@ for cmPath in ["/p/css03/esgf_publish/cmip3", "/p/css03/scratch/ipcc2_deleteme_J
         )
         fH.close()
 
-'''
+"""
 067561 filePath: /p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/run1/rlus_A2_a42_0108-0147.nc
 Traceback (most recent call last):
   File "/p/user_pub/climate_work/durack1/tmp/scanCMIP3.py", line 220, in <module>
@@ -506,4 +613,4 @@ Traceback (most recent call last):
   File "src/cftime/_cftime.pyx", line 385, in cftime._cftime.cast_to_int
 OverflowError: time values outside range of 64 bit signed integers
 
-'''
+"""
