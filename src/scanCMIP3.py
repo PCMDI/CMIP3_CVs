@@ -553,7 +553,7 @@ for cmPath in paths:
                             for dateFormat in dateReg:
                                 print("for dateFormat:", dateFormat)
                                 print("dateFound:", dateFound)
-                                pdb.set_trace()
+                                # pdb.set_trace()
                                 date = re.findall(dateFormat, attStr)
                                 print("re.date:", date)
                                 # timezones
@@ -608,7 +608,6 @@ for cmPath in paths:
                                     )
                                     dateFound = True
                                     dateFoundAtt = att
-                                    pdb.set_trace()
                     # if a valid date start saving pieces
                     if date:
                         # save filePath, fileName, attName, date
