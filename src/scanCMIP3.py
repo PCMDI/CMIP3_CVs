@@ -513,9 +513,23 @@ for cmPath in paths:
                                         check=True,
                                     )
                                 elif era == "CMIP6":
-                                    print("CMOR3 strings need defining, exiting")
-                                    pdb.set_trace()
-                                    #sys.exit()
+                                    # assuming ??? CMOR3
+                                    attStrInd = attStr.index(
+                                        "Z CMOR rewrote data to comply"
+                                    )
+                                    attStr = attStr[attStrInd - 19 : attStrInd]
+                                    date = re.findall(
+                                        r"\d{1,4}-\d{1,2}-\d{1,2}", attStr
+                                    )
+                                    date = date[0].split("-")
+                                    date = makeDate(
+                                        date[0],
+                                        date[1],
+                                        date[2],
+                                        startYr,
+                                        endYr,
+                                        check=True,
+                                    )
                                 # Proceed with globalAtts
                                 cmorCount = cmorCount + 1
                                 if "cmor_version" in fh.attrs.keys():
@@ -528,6 +542,8 @@ for cmPath in paths:
                                 r"year:[0-9]{4}:month:[0-9]{2}:day:[0-9]{2}",
                                 # r"Fri Aug  5 19:23:54 MDT 2005"
                                 r"[a-zA-Z]{3}\s[a-zA-Z]{3}\s{1,2}\d{1,2}\s\d{1,2}.\d{2}.\d{2}\s[A-Z]{3}\s\d{4}",
+                                # :creation_date = "2021-05-06T18:58:51Z" CMIP6/ISMIP6/NCAR/CESM2/ssp585-withism/r1i1p1f1/ImonGre/rlds/gn/v20210513
+                                r"\d{1,4}-\d{1,2}-\d{1,2}T{1,2}:{1.2}:{1,2}Z",
                             ]
                             for dateFormat in dateReg:
                                 if dateFound:
