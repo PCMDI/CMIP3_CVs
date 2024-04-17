@@ -546,15 +546,25 @@ for cmPath in paths:
                                 # :creation_date = "2021-05-06T18:58:51Z" CMIP6/ISMIP6/NCAR/CESM2/ssp585-withism/r1i1p1f1/ImonGre/rlds/gn/v20210513
                                 r"\d{1,4}-\d{1,2}-\d{1,2}T{1,2}:{1,2}:{1,2}Z",
                             ]
+                            # check if dateFound, otherwise drop into other attributes for matches
+                            if dateFound:
+                                continue
+                            # start checking other attributes
                             for dateFormat in dateReg:
                                 print("for dateFormat:", dateFormat)
                                 print("dateFound:", dateFound)
                                 pdb.set_trace()
-                                if dateFound:
-                                    continue
                                 date = re.findall(dateFormat, attStr)
+                                print("re.date:", date)
                                 # timezones
-                                timeZones = ["EDT", "EST", "MDT", "MST", "PDT", "PST"]
+                                timeZones = [
+                                    "EDT",
+                                    "EST",
+                                    "MDT",
+                                    "MST",
+                                    "PDT",
+                                    "PST",
+                                ]
                                 # CSIRO format - r"year:[0-9]{4}:month:[0-9]{2}:day:[0-9]{2}"
                                 if date and ("year" in date[0]):
                                     date = (
