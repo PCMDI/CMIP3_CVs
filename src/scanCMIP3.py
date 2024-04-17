@@ -544,7 +544,7 @@ for cmPath in paths:
                                 # r"Fri Aug  5 19:23:54 MDT 2005"
                                 r"[a-zA-Z]{3}\s[a-zA-Z]{3}\s{1,2}\d{1,2}\s\d{1,2}.\d{2}.\d{2}\s[A-Z]{3}\s\d{4}",
                                 # :creation_date = "2021-05-06T18:58:51Z" CMIP6/ISMIP6/NCAR/CESM2/ssp585-withism/r1i1p1f1/ImonGre/rlds/gn/v20210513
-                                r"\d{1,4}-\d{1,2}-\d{1,2}T{1,2}:{1.2}:{1,2}Z",
+                                r"\d{1,4}-\d{1,2}-\d{1,2}T{1,2}:{1,2}:{1,2}Z",
                             ]
                             for dateFormat in dateReg:
                                 if dateFound:
