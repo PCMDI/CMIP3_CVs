@@ -172,21 +172,21 @@ def getSha256(filePath, print=False):
     return readable_hash
 
 
-def getTimes(time):
+def getTimes(time, startYr, endYr):
     y = int(time.dt.year.data)
     m = int(time.dt.month.data)
     d = int(time.dt.day.data)
-    dateStr = makeDate(y, m, d, check=False)
+    dateStr = makeDate(y, m, d, startYr, endYr, check=False)
 
     return dateStr
 
 
-def makeDate(year, month, day, check):
+def makeDate(year, month, day, check, startYr, endYr):
     date = "-".join([str(year), str(month), str(day)])
     # print("makeDate: date =", date)
     # pdb.set_trace()
     if check:
-        date = checkDate(date)
+        date = checkDate(date, startYr, endYr)
 
     return date
 
@@ -451,8 +451,8 @@ for cmPath in paths:
                         cm3["!fileReadError"][fileReadErrorCount] = filePath
                         continue
                     if "T" in fh.cf.axes:
-                        startTime = getTimes(fh.time[0])
-                        endTime = getTimes(fh.time[-1])
+                        startTime = getTimes(fh.time[0], startYr, endYr)
+                        endTime = getTimes(fh.time[-1], startYr, endYr)
                     else:
                         startTime, endTime = [None for _ in range(2)]
                     attDict = fh.attrs
@@ -495,7 +495,14 @@ for cmPath in paths:
                                 elif era == "CMIP6":
                                     print("CMOR3 strings need defining, exiting")
                                     sys.exit()
-                                date = makeDate(date[-1], date[0], date[1], check=True)
+                                date = makeDate(
+                                    date[-1],
+                                    date[0],
+                                    date[1],
+                                    startYr,
+                                    endYr,
+                                    check=True,
+                                )
                                 cmorCount = cmorCount + 1
                                 if "cmor_version" in fh.attrs.keys():
                                     cmorVersion = fh.attrs["cmor_version"]
@@ -536,7 +543,9 @@ for cmPath in paths:
                                     elif len(date) == 7:
                                         day = date[3]
                                     day = "{:02d}".format(int(day))
-                                    date = makeDate(yr, mon, day, check=True)
+                                    date = makeDate(
+                                        yr, mon, day, startYr, endYr, check=True
+                                    )
                                     dateFound = True
                                     dateFoundAtt = att
                     # if a valid date start saving pieces
