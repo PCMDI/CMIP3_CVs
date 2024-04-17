@@ -598,6 +598,7 @@ for cmPath in paths:
                                     date[0],
                                 ):
                                     date = date[0].split("T")
+                                    print(date)
                                     date = date.split("-")
                                     print(date)
                                     pdb.set_trace()
