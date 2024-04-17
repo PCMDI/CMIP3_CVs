@@ -181,7 +181,7 @@ def getTimes(time, startYr, endYr):
     return dateStr
 
 
-def makeDate(year, month, day, check, startYr, endYr):
+def makeDate(year, month, day, startYr, endYr, check):
     date = "-".join([str(year), str(month), str(day)])
     # print("makeDate: date =", date)
     # pdb.set_trace()
