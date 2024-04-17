@@ -475,15 +475,25 @@ for cmPath in paths:
                                 dateFound = True
                                 dateFoundAtt = att
                             # Deal with CMOR matches
-                            print(attStr)
-                            pdb.set_trace()
-
                             if "CMOR rewrote data to comply" in attStr:
-                                attStrInd = attStr.index(" At ")
-                                attStr = attStr[attStrInd:]
-                                date = re.findall(r"\d{1,2}/\d{1,2}/\d{2,4}", attStr)
-                                date = date[0].split("/")
-                                # assuming mm/dd/yyyy e.g. At 20:53:22 on 06/28/2005, CMOR rewrote data to comply with CF standards and IPCC Fourth Assessment requirements
+                                if era == "CMIP3":  # CMOR1
+                                    # assuming mm/dd/yyyy e.g. At 20:53:22 on 06/28/2005, CMOR rewrote data to comply with CF standards and IPCC Fourth Assessment requirements
+                                    attStrInd = attStr.index(" At ")
+                                    attStr = attStr[attStrInd:]
+                                    date = re.findall(
+                                        r"\d{1,2}/\d{1,2}/\d{2,4}", attStr
+                                    )
+                                    date = date[0].split("/")
+                                elif era == "CMIP5":  # CMOR2
+                                    # assuming YYYY-MM-DDTHH:MM:SSZ e.g. ..from cfsv2_decadal runs. 2013-03-12T17:53:48Z CMOR rewrote data to comply with CF standards and CMIP5 requirements.
+                                    pdb.set_trace()
+                                    attStrInd = attStr.index("Z CMOR rewrote")
+                                    attStr = attStr[attStrInd:]
+                                    date = re.findall(
+                                        r"\d{1,2}/\d{1,2}/\d{2,4}", attStr
+                                    )
+                                    date = date[0].split("/")
+
                                 date = makeDate(date[-1], date[0], date[1], check=True)
                                 cmorCount = cmorCount + 1
                                 if "cmor_version" in fh.attrs.keys():
