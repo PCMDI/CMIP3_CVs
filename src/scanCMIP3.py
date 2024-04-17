@@ -547,6 +547,9 @@ for cmPath in paths:
                                 r"\d{1,4}-\d{1,2}-\d{1,2}T{1,2}:{1,2}:{1,2}Z",
                             ]
                             for dateFormat in dateReg:
+                                print("for dateFormat:", dateFormat)
+                                print("dateFound:", dateFound)
+                                pdb.set_trace()
                                 if dateFound:
                                     continue
                                 date = re.findall(dateFormat, attStr)
