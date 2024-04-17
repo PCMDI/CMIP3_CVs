@@ -595,7 +595,7 @@ for cmPath in paths:
                                 # CMIP6 NCAR CESM2 format r"\d{1,4}-\d{1,2}-\d{1,2}T\d{1,2}:\d{1,2}:\d{1,2}Z"
                                 if date and re.match(
                                     r"\d{1,4}-\d{1,2}-\d{1,2}T\d{1,2}:\d{1,2}:\d{1,2}Z",
-                                    date,
+                                    date[0],
                                 ):
                                     date = date.split("T")
                                     date = date.split("-")
