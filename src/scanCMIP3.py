@@ -495,6 +495,7 @@ for cmPath in paths:
                                 elif era == "CMIP6":
                                     print("CMOR3 strings need defining, exiting")
                                     sys.exit()
+                                pdb.set_trace()
                                 date = makeDate(
                                     date[-1],
                                     date[0],
@@ -503,6 +504,8 @@ for cmPath in paths:
                                     endYr,
                                     check=True,
                                 )
+                                print("date:", date)
+                                pdb.set_trace()
                                 cmorCount = cmorCount + 1
                                 if "cmor_version" in fh.attrs.keys():
                                     cmorVersion = fh.attrs["cmor_version"]
