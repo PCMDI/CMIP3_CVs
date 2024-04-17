@@ -535,7 +535,7 @@ for cmPath in paths:
                                 cmorCount = cmorCount + 1
                                 if "cmor_version" in fh.attrs.keys():
                                     cmorVersion = fh.attrs["cmor_version"]
-                                dateFound = True
+                                # dateFound = True
                                 dateFoundAtt = att
                             # Deal with regex matches
                             dateReg = [
