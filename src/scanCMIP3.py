@@ -488,11 +488,13 @@ for cmPath in paths:
                                     # assuming YYYY-MM-DDTHH:MM:SSZ e.g. ..from cfsv2_decadal runs. 2013-03-12T17:53:48Z CMOR rewrote data to comply with CF standards and CMIP5 requirements.
                                     pdb.set_trace()
                                     attStrInd = attStr.index("Z CMOR rewrote")
-                                    attStr = attStr[attStrInd:]
+                                    attStr = attStr[attStrInd - 19 : attStrInd]
                                     date = re.findall(
-                                        r"\d{1,2}/\d{1,2}/\d{2,4}", attStr
+                                        r"\d{1,4}-\d{1,2}-\d{1,2}T", attStr
                                     )
-                                    date = date[0].split("/")
+                                    date = date[0].split("-")
+                                    print(date)
+                                    pdb.set_trace()
 
                                 date = makeDate(date[-1], date[0], date[1], check=True)
                                 cmorCount = cmorCount + 1
