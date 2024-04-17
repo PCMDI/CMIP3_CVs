@@ -575,7 +575,7 @@ for cmPath in paths:
                                     )
                                     dateFound = True
                                     dateFoundAtt = att
-                                # NCAR CCSM format - r"[a-zA-Z]{3}\s[a-zA-Z]{3}\s{1,2}\d{1,2}\s\d{1,2}.\d{2}.\d{2}\s[A-Z]{3}\s\d{4}"
+                                # CMIP3 NCAR CCSM format - r"[a-zA-Z]{3}\s[a-zA-Z]{3}\s{1,2}\d{1,2}\s\d{1,2}.\d{2}.\d{2}\s[A-Z]{3}\s\d{4}"
                                 elif date and any(
                                     zone in date[0] for zone in timeZones
                                 ):
@@ -592,6 +592,15 @@ for cmPath in paths:
                                     )
                                     dateFound = True
                                     dateFoundAtt = att
+                                # CMIP6 NCAR CESM2 format r"\d{1,4}-\d{1,2}-\d{1,2}T\d{1,2}:\d{1,2}:\d{1,2}Z"
+                                if re.match(
+                                    r"\d{1,4}-\d{1,2}-\d{1,2}T\d{1,2}:\d{1,2}:\d{1,2}Z",
+                                    date,
+                                ):
+                                    date = date.split("T")
+                                    date = date.split("-")
+                                    print(date)
+                                    pdb.set_trace()
                     # if a valid date start saving pieces
                     if date:
                         # save filePath, fileName, attName, date
