@@ -20,6 +20,7 @@ PJD 30 Jun 2023     - Added getFileSize
 PJD 30 Jun 2023     - Removed table_id as this has file generation date/time - will provide erronous timestamp
 PJD 16 Apr 2024     - Update to attempt CMIP5/6 scanning
 PJD 18 Apr 2024     - Update for CMIP5/6 scanning; pull cmor_version check up
+PJD 18 Apr 2024     - Renamed scanCMIP3 -> scanCMIP.py
                     TODO: add time start/stop to fileNames that exclude them
                     TODO: table mappings O1 = Omon?, O1e?
 
