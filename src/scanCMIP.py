@@ -476,10 +476,6 @@ for cmPath in paths:
                                 )
                                 dateFound = True
                                 dateFoundAtt = att
-                            # cmor_version?
-                            if "cmor_version" in fh.attrs.keys():
-                                cmorVersion = fh.attrs["cmor_version"]
-                                cmorCount = cmorCount + 1
                             # Deal with CMOR matches
                             if "CMOR rewrote data to comply" in attStr:
                                 if era == "CMIP3":  # CMOR1
@@ -608,6 +604,10 @@ for cmPath in paths:
                                     )
                                     dateFound = True
                                     dateFoundAtt = att
+                    # cmor_version?
+                    if "cmor_version" in fh.attrs.keys():
+                        cmorVersion = fh.attrs["cmor_version"]
+                        cmorCount = cmorCount + 1
                     # if a valid date start saving pieces
                     if date:
                         # save filePath, fileName, attName, date
