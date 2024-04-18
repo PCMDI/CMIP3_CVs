@@ -551,11 +551,11 @@ for cmPath in paths:
                                 continue
                             # start checking other attributes
                             for dateFormat in dateReg:
-                                print("for dateFormat:", dateFormat)
-                                print("dateFound:", dateFound)
+                                # print("for dateFormat:", dateFormat)
+                                # print("dateFound:", dateFound)
                                 # pdb.set_trace()
                                 date = re.findall(dateFormat, attStr)
-                                print("re.date:", date)
+                                # print("re.date:", date)
                                 # timezones
                                 timeZones = [
                                     "EDT",
@@ -598,7 +598,7 @@ for cmPath in paths:
                                     date[0],
                                 ):
                                     date = date[0].split("T")
-                                    print(date)
+                                    # print(date)
                                     date = date[0].split("-")
                                     yr = date[0]
                                     mon = date[1]
@@ -653,48 +653,3 @@ for cmPath in paths:
             separators=(",", ":"),
         )
         fH.close()
-
-"""
-067561 filePath: /p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/run1/rlus_A2_a42_0108-0147.nc
-Traceback (most recent call last):
-  File "/p/user_pub/climate_work/durack1/tmp/scanCMIP3.py", line 220, in <module>
-    fh = open_dataset(filePath, use_cftime=True)
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xcdat/dataset.py", line 105, in open_dataset
-    ds = xr.open_dataset(path, decode_times=True, **kwargs)  # type: ignore
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/backends/api.py", line 531, in open_dataset
-    backend_ds = backend.open_dataset(
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/backends/netCDF4_.py", line 569, in open_dataset
-    ds = store_entrypoint.open_dataset(
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/backends/store.py", line 41, in open_dataset
-    ds = Dataset(vars, attrs=attrs)
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/core/dataset.py", line 599, in __init__
-    variables, coord_names, dims, indexes, _ = merge_data_and_coords(
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/core/merge.py", line 575, in merge_data_and_coords
-    return merge_core(
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/core/merge.py", line 755, in merge_core
-    collected = collect_variables_and_indexes(aligned, indexes=indexes)
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/core/merge.py", line 365, in collect_variables_and_indexes
-    variable = as_variable(variable, name=name)
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/core/variable.py", line 167, in as_variable
-    obj = obj.to_index_variable()
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/core/variable.py", line 543, in to_index_variable
-    return IndexVariable(
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/core/variable.py", line 2724, in __init__
-    self._data = PandasIndexingAdapter(self._data)
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/core/indexing.py", line 1418, in __init__
-    self.array = safe_cast_to_index(array)
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/core/utils.py", line 139, in safe_cast_to_index
-    index = pd.Index(np.asarray(array), **kwargs)
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/core/indexing.py", line 524, in __array__
-    return np.asarray(array[self.key], dtype=None)
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/coding/variables.py", line 72, in __array__
-    return self.func(self.array)
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/coding/times.py", line 293, in decode_cf_datetime
-    dates = _decode_datetime_with_cftime(flat_num_dates, units, calendar)
-  File "/home/durack1/mambaforge/envs/xcd031spy532mat353/lib/python3.10/site-packages/xarray/coding/times.py", line 201, in _decode_datetime_with_cftime
-    cftime.num2date(num_dates, units, calendar, only_use_cftime_datetimes=True)
-  File "src/cftime/_cftime.pyx", line 586, in cftime._cftime.num2date
-  File "src/cftime/_cftime.pyx", line 385, in cftime._cftime.cast_to_int
-OverflowError: time values outside range of 64 bit signed integers
-
-"""
