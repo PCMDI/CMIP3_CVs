@@ -643,6 +643,8 @@ for cmPath in paths:
         # create filename dynamically from count
         if count % 100000:  # if equal will execute
             strCounter = "{:03d}".format(int(count / 100000))
+        elif count == 1:
+            strCounter = "000"
         # outFile = "_".join([timeFormatDir, ".".join([era, "json"])])
         outFile = "_".join([era, ".".join([strCounter, "json"])])
         if os.path.exists(outFile):
