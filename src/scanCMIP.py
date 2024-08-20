@@ -642,10 +642,8 @@ for cmPath in paths:
         timeNow = datetime.datetime.now()
         timeFormatDir = timeNow.strftime("%y%m%d")
         # create filename dynamically from count
-        if count % 100000:  # if equal will execute
+        if not count % 100000:  # if true will execute
             strCounter = "{:03d}".format(int(count / 100000))
-        elif count == 1:
-            strCounter = "000"
         else:
             print("count:", count)
             pdb.set_trace()
