@@ -33,7 +33,6 @@ import datetime
 import hashlib
 import json
 import os
-import pdb
 import re
 import xarray as xr
 from xcdat import open_dataset
