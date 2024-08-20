@@ -21,6 +21,7 @@ PJD 30 Jun 2023     - Removed table_id as this has file generation date/time - w
 PJD 16 Apr 2024     - Update to attempt CMIP5/6 scanning
 PJD 18 Apr 2024     - Update for CMIP5/6 scanning; pull cmor_version check up
 PJD 18 Apr 2024     - Renamed scanCMIP3 -> scanCMIP.py
+PJD 20 Aug 2024     - Added strCounter to separate files to 100000 entries - stop GB write slowdown
                     TODO: add time start/stop to fileNames that exclude them
                     TODO: table mappings O1 = Omon?, O1e?
 
@@ -639,7 +640,11 @@ for cmPath in paths:
         # save dictionary ## if files
         timeNow = datetime.datetime.now()
         timeFormatDir = timeNow.strftime("%y%m%d")
-        outFile = "_".join([timeFormatDir, ".".join([era, "json"])])
+        # create filename dynamically from count
+        if count % 100000:  # if equal will execute
+            strCounter = "{:03d}".format(int(count / 100000))
+        # outFile = "_".join([timeFormatDir, ".".join([era, "json"])])
+        outFile = "_".join([era, ".".join([strCounter, "json"])])
         if os.path.exists(outFile):
             os.remove(outFile)
         print("writing:", outFile)
