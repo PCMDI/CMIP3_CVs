@@ -644,9 +644,6 @@ for cmPath in paths:
         # create filename dynamically from count
         if not count % 100000:  # if true will execute
             strCounter = "{:03d}".format(int(count / 100000))
-        else:
-            print("count:", count)
-            pdb.set_trace()
         # outFile = "_".join([timeFormatDir, ".".join([era, "json"])])
         outFile = "_".join([era, ".".join([strCounter, "json"])])
         if os.path.exists(outFile):
