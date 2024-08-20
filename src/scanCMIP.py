@@ -33,6 +33,7 @@ import datetime
 import hashlib
 import json
 import os
+import pdb
 import re
 import xarray as xr
 from xcdat import open_dataset
@@ -645,6 +646,9 @@ for cmPath in paths:
             strCounter = "{:03d}".format(int(count / 100000))
         elif count == 1:
             strCounter = "000"
+        else:
+            print("count:", count)
+            pdb.set_trace()
         # outFile = "_".join([timeFormatDir, ".".join([era, "json"])])
         outFile = "_".join([era, ".".join([strCounter, "json"])])
         if os.path.exists(outFile):
