@@ -662,7 +662,7 @@ for cmPath in paths:
                 cm["!fileReadError"] = fileReadErrorTmp
                 cm["!noDateFile"] = noDateFileTmp
             # outFile = "_".join([timeFormatDir, ".".join([era, "json"])])
-            outFile = "_".join([era, ".".join([strCounter, "json"])])
+            outFile = "_".join([era, ".".join([str(strCounter), "json"])])
             if os.path.exists(outFile):
                 os.remove(outFile)
             print("writing:", outFile)
