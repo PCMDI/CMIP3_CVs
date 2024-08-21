@@ -363,7 +363,7 @@ cm = {}
 cm["!badFile"] = {}
 cm["!noDateFile"] = {}
 cm["!fileReadError"] = {}
-badFileCount, cmorCount, count, fileReadErrorCount, noDateFileCount = [
+badFileCount, cmorCount, count, fileReadErrorCount, noDateFileCount, strCounter = [
     0 for _ in range(5)
 ]
 for cmPath in paths:
@@ -661,8 +661,6 @@ for cmPath in paths:
                 cm["!badFile"] = badFileTmp
                 cm["!fileReadError"] = fileReadErrorTmp
                 cm["!noDateFile"] = noDateFileTmp
-            if count == 0:
-                strCounter = "{:03d}".format(0)
             # outFile = "_".join([timeFormatDir, ".".join([era, "json"])])
             outFile = "_".join([era, ".".join([strCounter, "json"])])
             if os.path.exists(outFile):
