@@ -364,7 +364,7 @@ cm["!badFile"] = {}
 cm["!noDateFile"] = {}
 cm["!fileReadError"] = {}
 badFileCount, cmorCount, count, fileReadErrorCount, noDateFileCount, strCounter = [
-    0 for _ in range(5)
+    0 for _ in range(6)
 ]
 for cmPath in paths:
     # for cmPath in ["/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/run1"]:  # bug hunting
