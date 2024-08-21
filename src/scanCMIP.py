@@ -644,6 +644,7 @@ for cmPath in paths:
         # create filename dynamically from count
         countLim = 10
         if not count % countLim:  # if true will execute
+            print("count/countLim:", count, (count % countLim))
             strCounter = "{:03d}".format(int(count / countLim))
             if count != 0:
                 # create new dictionary
