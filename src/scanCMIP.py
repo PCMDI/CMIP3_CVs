@@ -34,6 +34,7 @@ import datetime
 import hashlib
 import json
 import os
+import pdb
 import re
 import xarray as xr
 from xcdat import open_dataset
@@ -645,6 +646,7 @@ for cmPath in paths:
         countLim = 10
         if not count % countLim:  # if true will execute
             print("count/countLim:", count, (count % countLim))
+            pdb.set_trace()
             strCounter = "{:03d}".format(int(count / countLim))
             if count != 0:
                 # create new dictionary
