@@ -647,7 +647,7 @@ for cmPath in paths:
                 if not count % countLim and (count != 0):  # if true will execute
                     print("count/countLim:", count, (count % countLim))
                     pdb.set_trace()
-                    strCounter = "{:03d}".format(int(count / countLim))
+                    strCounter = int(count / countLim)
                     # create new dictionary
                     # dict_keys(['!_cmorCount', '!_fileCount', '!badFile', '!fileReadError', '!noDateFile',
                     cmorCountTmp = cm["!_cmorCount"]
@@ -662,7 +662,9 @@ for cmPath in paths:
                     cm["!fileReadError"] = fileReadErrorTmp
                     cm["!noDateFile"] = noDateFileTmp
                 # outFile = "_".join([timeFormatDir, ".".join([era, "json"])])
-                outFile = "_".join([era, ".".join([str(strCounter), "json"])])
+                outFile = "_".join(
+                    [era, ".".join(["{:03d}".format(strCounter), "json"])]
+                )
                 if os.path.exists(outFile):
                     os.remove(outFile)
                 print("writing:", outFile)
