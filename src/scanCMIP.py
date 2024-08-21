@@ -645,7 +645,7 @@ for cmPath in paths:
         countLim = 10
         if not count % countLim:  # if true will execute
             strCounter = "{:03d}".format(int(count / countLim))
-            if not 0:
+            if count != 0:
                 # create new dictionary
                 # dict_keys(['!_cmorCount', '!_fileCount', '!badFile', '!fileReadError', '!noDateFile',
                 cmorCountTmp = cm["!_cmorCount"]
