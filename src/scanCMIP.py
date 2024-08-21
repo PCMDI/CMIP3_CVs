@@ -22,6 +22,7 @@ PJD 16 Apr 2024     - Update to attempt CMIP5/6 scanning
 PJD 18 Apr 2024     - Update for CMIP5/6 scanning; pull cmor_version check up
 PJD 18 Apr 2024     - Renamed scanCMIP3 -> scanCMIP.py
 PJD 20 Aug 2024     - Added strCounter to separate files to 100000 entries - stop GB write slowdown
+PJD 21 Aug 2024     - Updated to delete cm dictionary and rebuild, solving file growth problem
                     TODO: add time start/stop to fileNames that exclude them
                     TODO: table mappings O1 = Omon?, O1e?
 
@@ -268,14 +269,14 @@ def openData(filePath, fileName, ...):
             # pdb.set_trace()
             badFileCount = badFileCount+1
             print("badFile; filePath:", filePath)
-            cm3["!badFileCount"] = badFileCount
-            cm3["!badFileList"][badFileCount] = filePath
+            cm["!badFileCount"] = badFileCount
+            cm["!badFileList"][badFileCount] = filePath
             continue
     except:
         fileReadErrorCount = fileReadErrorCount+1
         print("fileReadError; filePath:", filePath)
-        cm3["!fileReadErrorCount"] = fileReadErrorCount
-        cm3["!fileReadError"][fileReadErrorCount] = filePath
+        cm["!fileReadErrorCount"] = fileReadErrorCount
+        cm["!fileReadError"][fileReadErrorCount] = filePath
         continue
 """
 
@@ -357,10 +358,10 @@ excludeDirs2 = set(["ipcc"])
 # 004306 filePath: /p/css03/esgf_publish/cmip3/ipcc/summer/T4031qtC.pop.h.0019-08-21-43200.nc
 
 # %% iterate over files
-cm3 = {}
-cm3["!badFile"] = {}
-cm3["!noDateFile"] = {}
-cm3["!fileReadError"] = {}
+cm = {}
+cm["!badFile"] = {}
+cm["!noDateFile"] = {}
+cm["!fileReadError"] = {}
 badFileCount, cmorCount, count, fileReadErrorCount, noDateFileCount = [
     0 for _ in range(5)
 ]
@@ -400,14 +401,14 @@ for cmPath in paths:
                 if filePath[-3:] != ".nc":  # deal with *.nc.bad files
                     badFileCount = badFileCount + 1
                     print("no date; filePath:", filePath)
-                    cm3["!badFileCount"] = badFileCount
-                    cm3["!badFile"][badFileCount] = filePath
+                    cm["!badFileCount"] = badFileCount
+                    cm["!badFile"][badFileCount] = filePath
                 elif filePath[-3:] == ".nc":  # process all "good" files
                     if c1 == 0:
-                        cm3[root] = {}  # create dir entry for each file
+                        cm[root] = {}  # create dir entry for each file
                     elif root not in cm3.keys():
                         # create dir entry for each file, if first file bad
-                        cm3[root] = {}
+                        cm[root] = {}
                     cmorVersion, dateFound = [
                         False for _ in range(2)
                     ]  # set for each file
@@ -440,16 +441,16 @@ for cmPath in paths:
                             # pdb.set_trace()
                             badFileCount = badFileCount + 1
                             print("badFile; filePath:", filePath)
-                            cm3["!badFileCount"] = badFileCount
-                            cm3["!badFile"][badFileCount] = filePath
+                            cm["!badFileCount"] = badFileCount
+                            cm["!badFile"][badFileCount] = filePath
                             continue
                     except:
                         print("except")
                         # pdb.set_trace()
                         fileReadErrorCount = fileReadErrorCount + 1
                         print("fileReadError; filePath:", filePath)
-                        cm3["!fileReadErrorCount"] = fileReadErrorCount
-                        cm3["!fileReadError"][fileReadErrorCount] = filePath
+                        cm["!fileReadErrorCount"] = fileReadErrorCount
+                        cm["!fileReadError"][fileReadErrorCount] = filePath
                         continue
                     if "T" in fh.cf.axes:
                         startTime = getTimes(fh.time[0], startYr, endYr)
@@ -612,22 +613,22 @@ for cmPath in paths:
                     # if a valid date start saving pieces
                     if date:
                         # save filePath, fileName, attName, date
-                        cm3[root][fileName] = {}
-                        cm3[root][fileName]["date"] = [date, dateFoundAtt]
-                        cm3[root][fileName]["time0"] = startTime
-                        cm3[root][fileName]["timeN"] = endTime
-                        cm3[root][fileName]["sha256"] = sha256
-                        cm3[root][fileName]["filePath"] = filePath
-                        cm3[root][fileName]["fileSizeBytes"] = fileSizeBytes
+                        cm[root][fileName] = {}
+                        cm[root][fileName]["date"] = [date, dateFoundAtt]
+                        cm[root][fileName]["time0"] = startTime
+                        cm[root][fileName]["timeN"] = endTime
+                        cm[root][fileName]["sha256"] = sha256
+                        cm[root][fileName]["filePath"] = filePath
+                        cm[root][fileName]["fileSizeBytes"] = fileSizeBytes
                         if cmorVersion:
-                            cm3[root][fileName]["cmorVersion"] = str(cmorVersion)
-                        cm3["!_cmorCount"] = cmorCount
-                        cm3["!_fileCount"] = count  # https://ascii.cl/
+                            cm[root][fileName]["cmorVersion"] = str(cmorVersion)
+                        cm["!_cmorCount"] = cmorCount
+                        cm["!_fileCount"] = count  # https://ascii.cl/
                     if not date:
                         noDateFileCount = noDateFileCount + 1
                         print("no date; filePath:", filePath)
-                        cm3["!noDateFileCount"] = noDateFileCount
-                        cm3["!noDateFile"][noDateFileCount] = [
+                        cm["!noDateFileCount"] = noDateFileCount
+                        cm["!noDateFile"][noDateFileCount] = [
                             filePath,
                             sha256,
                             fileSizeBytes,
@@ -641,8 +642,21 @@ for cmPath in paths:
         timeNow = datetime.datetime.now()
         timeFormatDir = timeNow.strftime("%y%m%d")
         # create filename dynamically from count
-        if not count % 100000:  # if true will execute
-            strCounter = "{:03d}".format(int(count / 100000))
+        countLim = 10
+        if not count % countLim:  # if true will execute
+            strCounter = "{:03d}".format(int(count / countLim))
+            # create new dictionary
+            cmorCountTmp = cm["!_cmorCount"]
+            fileCountTmp = cm["!_fileCount"]
+            badFileTmp = cm["!badFile"]
+            fileReadErrorTmp = cm["!fileReadError"]
+            noDateFileTmp = cm["!noDateFile"]
+            cm = {}
+            cm["!_cmorCount"] = cmorCountTmp
+            cm["!_fileCount"] = fileCountTmp
+            cm["!badFile"] = badFileTmp
+            cm["!fileReadError"] = fileReadErrorTmp
+            cm["!noDateFile"] = noDateFileTmp
         # outFile = "_".join([timeFormatDir, ".".join([era, "json"])])
         outFile = "_".join([era, ".".join([strCounter, "json"])])
         if os.path.exists(outFile):
@@ -650,7 +664,7 @@ for cmPath in paths:
         print("writing:", outFile)
         fH = open(outFile, "w")
         json.dump(
-            cm3,
+            cm,
             fH,
             ensure_ascii=True,
             sort_keys=True,
