@@ -406,7 +406,7 @@ for cmPath in paths:
                 elif filePath[-3:] == ".nc":  # process all "good" files
                     if c1 == 0:
                         cm[root] = {}  # create dir entry for each file
-                    elif root not in cm3.keys():
+                    elif root not in cm.keys():
                         # create dir entry for each file, if first file bad
                         cm[root] = {}
                     cmorVersion, dateFound = [
