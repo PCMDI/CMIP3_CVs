@@ -644,24 +644,25 @@ for cmPath in paths:
         timeFormatDir = timeNow.strftime("%y%m%d")
         # create filename dynamically from count
         countLim = 10
-        if not count % countLim:  # if true will execute
+        if not count % countLim and (count != 0):  # if true will execute
             print("count/countLim:", count, (count % countLim))
             pdb.set_trace()
             strCounter = "{:03d}".format(int(count / countLim))
-            if count != 0:
-                # create new dictionary
-                # dict_keys(['!_cmorCount', '!_fileCount', '!badFile', '!fileReadError', '!noDateFile',
-                cmorCountTmp = cm["!_cmorCount"]
-                fileCountTmp = cm["!_fileCount"]
-                badFileTmp = cm["!badFile"]
-                fileReadErrorTmp = cm["!fileReadError"]
-                noDateFileTmp = cm["!noDateFile"]
-                cm = {}
-                cm["!_cmorCount"] = cmorCountTmp
-                cm["!_fileCount"] = fileCountTmp
-                cm["!badFile"] = badFileTmp
-                cm["!fileReadError"] = fileReadErrorTmp
-                cm["!noDateFile"] = noDateFileTmp
+            # create new dictionary
+            # dict_keys(['!_cmorCount', '!_fileCount', '!badFile', '!fileReadError', '!noDateFile',
+            cmorCountTmp = cm["!_cmorCount"]
+            fileCountTmp = cm["!_fileCount"]
+            badFileTmp = cm["!badFile"]
+            fileReadErrorTmp = cm["!fileReadError"]
+            noDateFileTmp = cm["!noDateFile"]
+            cm = {}
+            cm["!_cmorCount"] = cmorCountTmp
+            cm["!_fileCount"] = fileCountTmp
+            cm["!badFile"] = badFileTmp
+            cm["!fileReadError"] = fileReadErrorTmp
+            cm["!noDateFile"] = noDateFileTmp
+        if count == 0:
+            strCounter = "{:03d}".format(0)
         # outFile = "_".join([timeFormatDir, ".".join([era, "json"])])
         outFile = "_".join([era, ".".join([strCounter, "json"])])
         if os.path.exists(outFile):
