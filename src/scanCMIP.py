@@ -645,18 +645,20 @@ for cmPath in paths:
         countLim = 10
         if not count % countLim:  # if true will execute
             strCounter = "{:03d}".format(int(count / countLim))
-            # create new dictionary
-            cmorCountTmp = cm["!_cmorCount"]
-            fileCountTmp = cm["!_fileCount"]
-            badFileTmp = cm["!badFile"]
-            fileReadErrorTmp = cm["!fileReadError"]
-            noDateFileTmp = cm["!noDateFile"]
-            cm = {}
-            cm["!_cmorCount"] = cmorCountTmp
-            cm["!_fileCount"] = fileCountTmp
-            cm["!badFile"] = badFileTmp
-            cm["!fileReadError"] = fileReadErrorTmp
-            cm["!noDateFile"] = noDateFileTmp
+            if not 0:
+                # create new dictionary
+                # dict_keys(['!_cmorCount', '!_fileCount', '!badFile', '!fileReadError', '!noDateFile',
+                cmorCountTmp = cm["!_cmorCount"]
+                fileCountTmp = cm["!_fileCount"]
+                badFileTmp = cm["!badFile"]
+                fileReadErrorTmp = cm["!fileReadError"]
+                noDateFileTmp = cm["!noDateFile"]
+                cm = {}
+                cm["!_cmorCount"] = cmorCountTmp
+                cm["!_fileCount"] = fileCountTmp
+                cm["!badFile"] = badFileTmp
+                cm["!fileReadError"] = fileReadErrorTmp
+                cm["!noDateFile"] = noDateFileTmp
         # outFile = "_".join([timeFormatDir, ".".join([era, "json"])])
         outFile = "_".join([era, ".".join([strCounter, "json"])])
         if os.path.exists(outFile):
