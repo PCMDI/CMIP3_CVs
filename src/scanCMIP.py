@@ -35,7 +35,6 @@ import datetime
 import hashlib
 import json
 import os
-import pdb
 import re
 import xarray as xr
 from xcdat import open_dataset
@@ -668,14 +667,15 @@ for cmPath in paths:
             )
             fH.close()
 
-            # create filename dynamically from dirCount
-            countLim = 10
+            # create filename dynamically from dirCount - complete write above before
+            # resetting the cm dictionary
+            countLim = 1000
             if not dirCount % countLim and (dirCount != 0):  # if true will execute
-                print("dirCount/countLim:", dirCount, (dirCount % countLim))
-                pdb.set_trace()
+                print(
+                    "dirCount/countLim/count:", dirCount, (dirCount % countLim), count
+                )
                 strCounter = int(dirCount / countLim)
                 # create new dictionary
-                # dict_keys(['!_cmorCount', '!_fileCount', '!badFile', '!fileReadError', '!noDateFile',
                 cmorCountTmp = cm["!_cmorCount"]
                 fileCountTmp = cm["!_fileCount"]
                 badFileTmp = cm["!badFile"]
@@ -683,6 +683,7 @@ for cmPath in paths:
                 noDateFileTmp = cm["!noDateFile"]
                 cm = {}
                 cm["!_cmorCount"] = cmorCountTmp
+                cm["!_dirCount"] = dirCount
                 cm["!_fileCount"] = fileCountTmp
                 cm["!badFile"] = badFileTmp
                 cm["!fileReadError"] = fileReadErrorTmp
