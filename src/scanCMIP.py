@@ -363,9 +363,15 @@ cm = {}
 cm["!badFile"] = {}
 cm["!noDateFile"] = {}
 cm["!fileReadError"] = {}
-badFileCount, cmorCount, count, fileReadErrorCount, noDateFileCount, strCounter = [
-    0 for _ in range(6)
-]
+(
+    badFileCount,
+    cmorCount,
+    count,
+    dirCount,
+    fileReadErrorCount,
+    noDateFileCount,
+    strCounter,
+) = [0 for _ in range(7)]
 for cmPath in paths:
     # for cmPath in ["/p/css03/esgf_publish/cmip3/ipcc/20c3m/atm/da/rlus/miub_echo_g/run1"]:  # bug hunting
     # for cmPath in list(bad.keys()):
@@ -639,42 +645,44 @@ for cmPath in paths:
                     # close open file
                     fh.close()
 
-                # save dictionary ## if files
-                timeNow = datetime.datetime.now()
-                timeFormatDir = timeNow.strftime("%y%m%d")
-                # create filename dynamically from count
-                countLim = 10
-                if not count % countLim and (count != 0):  # if true will execute
-                    print("count/countLim:", count, (count % countLim))
-                    pdb.set_trace()
-                    strCounter = int(count / countLim)
-                    # create new dictionary
-                    # dict_keys(['!_cmorCount', '!_fileCount', '!badFile', '!fileReadError', '!noDateFile',
-                    cmorCountTmp = cm["!_cmorCount"]
-                    fileCountTmp = cm["!_fileCount"]
-                    badFileTmp = cm["!badFile"]
-                    fileReadErrorTmp = cm["!fileReadError"]
-                    noDateFileTmp = cm["!noDateFile"]
-                    cm = {}
-                    cm["!_cmorCount"] = cmorCountTmp
-                    cm["!_fileCount"] = fileCountTmp
-                    cm["!badFile"] = badFileTmp
-                    cm["!fileReadError"] = fileReadErrorTmp
-                    cm["!noDateFile"] = noDateFileTmp
-                # outFile = "_".join([timeFormatDir, ".".join([era, "json"])])
-                outFile = "_".join(
-                    [era, ".".join(["{:03d}".format(strCounter), "json"])]
-                )
-                if os.path.exists(outFile):
-                    os.remove(outFile)
-                print("writing:", outFile)
-                fH = open(outFile, "w")
-                json.dump(
-                    cm,
-                    fH,
-                    ensure_ascii=True,
-                    sort_keys=True,
-                    indent=4,
-                    separators=(",", ":"),
-                )
-                fH.close()
+                # if filePath[-3:] != ".nc":
+
+            # save dictionary ## if files and completed dir
+            dirCount = dirCount + 1  # directory counter
+            # timeNow = datetime.datetime.now()
+            # timeFormatDir = timeNow.strftime("%y%m%d")
+            # outFile = "_".join([timeFormatDir, ".".join([era, "json"])])
+            outFile = "_".join([era, ".".join(["{:03d}".format(strCounter), "json"])])
+            if os.path.exists(outFile):
+                os.remove(outFile)
+            print("writing:", outFile)
+            fH = open(outFile, "w")
+            json.dump(
+                cm,
+                fH,
+                ensure_ascii=True,
+                sort_keys=True,
+                indent=4,
+                separators=(",", ":"),
+            )
+            fH.close()
+
+            # create filename dynamically from dirCount
+            countLim = 10
+            if not dirCount % countLim and (dirCount != 0):  # if true will execute
+                print("count/countLim:", count, (count % countLim))
+                pdb.set_trace()
+                strCounter = int(count / countLim)
+                # create new dictionary
+                # dict_keys(['!_cmorCount', '!_fileCount', '!badFile', '!fileReadError', '!noDateFile',
+                cmorCountTmp = cm["!_cmorCount"]
+                fileCountTmp = cm["!_fileCount"]
+                badFileTmp = cm["!badFile"]
+                fileReadErrorTmp = cm["!fileReadError"]
+                noDateFileTmp = cm["!noDateFile"]
+                cm = {}
+                cm["!_cmorCount"] = cmorCountTmp
+                cm["!_fileCount"] = fileCountTmp
+                cm["!badFile"] = badFileTmp
+                cm["!fileReadError"] = fileReadErrorTmp
+                cm["!noDateFile"] = noDateFileTmp
