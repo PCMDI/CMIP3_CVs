@@ -24,6 +24,7 @@ PJD 18 Apr 2024     - Renamed scanCMIP3 -> scanCMIP.py
 PJD 20 Aug 2024     - Added strCounter to separate files to 100000 entries - stop GB write slowdown
 PJD 21 Aug 2024     - Updated to delete cm dictionary and rebuild, solving file growth problem
 PJD 22 Aug 2024     - Added dirCount logic
+PJD 22 Aug 2024     - Updated dirCount logic 1000 -> 10000 to reduce output file counts
                     TODO: add time start/stop to fileNames that exclude them
                     TODO: table mappings O1 = Omon?, O1e?
 
@@ -669,7 +670,7 @@ for cmPath in paths:
 
             # create filename dynamically from dirCount - complete write above before
             # resetting the cm dictionary
-            countLim = 1000  # 10 = json files between 10 and 80 kb
+            countLim = 10000  # json files between 1000 = 600kb-3Mb; 10 = 10-80 kb
             if not dirCount % countLim and (dirCount != 0):  # if true will execute
                 print(
                     "dirCount/countLim/count:", dirCount, (dirCount % countLim), count
