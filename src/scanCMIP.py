@@ -673,7 +673,7 @@ for cmPath in paths:
             if not dirCount % countLim and (dirCount != 0):  # if true will execute
                 print("dirCount/countLim:", dirCount, (dirCount % countLim))
                 pdb.set_trace()
-                strCounter = int(count / countLim)
+                strCounter = int(dirCount / countLim)
                 # create new dictionary
                 # dict_keys(['!_cmorCount', '!_fileCount', '!badFile', '!fileReadError', '!noDateFile',
                 cmorCountTmp = cm["!_cmorCount"]
