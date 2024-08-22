@@ -669,7 +669,7 @@ for cmPath in paths:
 
             # create filename dynamically from dirCount - complete write above before
             # resetting the cm dictionary
-            countLim = 1000
+            countLim = 1000  # 10 = json files between 10 and 80 kb
             if not dirCount % countLim and (dirCount != 0):  # if true will execute
                 print(
                     "dirCount/countLim/count:", dirCount, (dirCount % countLim), count
