@@ -23,6 +23,7 @@ PJD 18 Apr 2024     - Update for CMIP5/6 scanning; pull cmor_version check up
 PJD 18 Apr 2024     - Renamed scanCMIP3 -> scanCMIP.py
 PJD 20 Aug 2024     - Added strCounter to separate files to 100000 entries - stop GB write slowdown
 PJD 21 Aug 2024     - Updated to delete cm dictionary and rebuild, solving file growth problem
+PJD 22 Aug 2024     - Added dirCount logic
                     TODO: add time start/stop to fileNames that exclude them
                     TODO: table mappings O1 = Omon?, O1e?
 
@@ -670,7 +671,7 @@ for cmPath in paths:
             # create filename dynamically from dirCount
             countLim = 10
             if not dirCount % countLim and (dirCount != 0):  # if true will execute
-                print("count/countLim:", count, (count % countLim))
+                print("dirCount/countLim:", dirCount, (dirCount % countLim))
                 pdb.set_trace()
                 strCounter = int(count / countLim)
                 # create new dictionary
