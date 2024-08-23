@@ -25,6 +25,7 @@ PJD 20 Aug 2024     - Added strCounter to separate files to 100000 entries - sto
 PJD 21 Aug 2024     - Updated to delete cm dictionary and rebuild, solving file growth problem
 PJD 22 Aug 2024     - Added dirCount logic
 PJD 22 Aug 2024     - Updated dirCount logic 1000 -> 10000 to reduce output file counts
+PJD 22 Aug 2024     - Added dirCount update to live file, not just strCounter increment
                     TODO: add time start/stop to fileNames that exclude them
                     TODO: table mappings O1 = Omon?, O1e?
 
@@ -631,6 +632,7 @@ for cmPath in paths:
                         if cmorVersion:
                             cm[root][fileName]["cmorVersion"] = str(cmorVersion)
                         cm["!_cmorCount"] = cmorCount
+                        cm["!_dirCount"] = dirCount
                         cm["!_fileCount"] = count  # https://ascii.cl/
                     if not date:
                         noDateFileCount = noDateFileCount + 1
