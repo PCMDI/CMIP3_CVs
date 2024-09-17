@@ -26,6 +26,7 @@ PJD 21 Aug 2024     - Updated to delete cm dictionary and rebuild, solving file 
 PJD 22 Aug 2024     - Added dirCount logic
 PJD 22 Aug 2024     - Updated dirCount logic 1000 -> 10000 to reduce output file counts
 PJD 22 Aug 2024     - Added dirCount update to live file, not just strCounter increment
+PJD 17 Sep 2024     - Added gc.collect() calls to attempt to alleviate memory bloat
                     TODO: add time start/stop to fileNames that exclude them
                     TODO: table mappings O1 = Omon?, O1e?
 
@@ -34,6 +35,7 @@ PJD 22 Aug 2024     - Added dirCount update to live file, not just strCounter in
 
 import argparse
 import datetime
+import gc
 import hashlib
 import json
 import os
@@ -647,6 +649,7 @@ for cmPath in paths:
 
                     # close open file
                     fh.close()
+                    gc.collect()  # force memory refresh
 
                 # if filePath[-3:] != ".nc":
 
@@ -669,10 +672,11 @@ for cmPath in paths:
                 separators=(",", ":"),
             )
             fH.close()
+            gc.collect()  # force memory refresh
 
             # create filename dynamically from dirCount - complete write above before
             # resetting the cm dictionary
-            countLim = 10000  # json files between 1000 = 600kb-3Mb; 10 = 10-80 kb
+            countLim = 10000  # json files between 10000 = 7.5-222Mb; 1000 = 600kb-3Mb; 10 = 10-80 kb
             if not dirCount % countLim and (dirCount != 0):  # if true will execute
                 print(
                     "dirCount/countLim/count:", dirCount, (dirCount % countLim), count
